@@ -1,0 +1,22 @@
+---
+const { title, href, meta, excerpt, label, cover } = Astro.props;
+---
+<article class="card">
+  <a class="card-link" href={href}>
+    <div class="card-media">
+      {cover ? (
+        <img src={cover} alt="" loading="lazy" />
+      ) : (
+        <div class="card-placeholder">
+          <span>On the aux</span>
+        </div>
+      )}
+    </div>
+    <div class="card-body">
+      {label && <span class="pill">{label}</span>}
+      <h3>{title}</h3>
+      {meta && <p class="meta">{meta}</p>}
+      {excerpt && <p class="excerpt">{excerpt}</p>}
+    </div>
+  </a>
+</article>

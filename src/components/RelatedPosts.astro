@@ -1,0 +1,95 @@
+---
+import { getRelatedPosts, type RelatedPost } from '../utils/related';
+import { formatDate } from '../utils/format';
+
+interface Props {
+  currentSlug: string;
+  currentCollection: string;
+  currentTags: string[];
+  currentArtist?: string;
+}
+
+const { currentSlug, currentCollection, currentTags, currentArtist } = Astro.props;
+
+const relatedPosts = await getRelatedPosts(
+  currentSlug,
+  currentCollection,
+  currentTags,
+  currentArtist,
+  3
+);
+---
+
+{relatedPosts.length > 0 && (
+  <aside class="related-posts">
+    <h2>Related posts</h2>
+    <ul class="related-list">
+      {relatedPosts.map((post) => (
+        <li>
+          <a href={post.href} class="related-item">
+            <span class="related-meta">
+              <span class="pill">{post.collectionLabel}</span>
+              <span class="related-date">{formatDate(post.date)}</span>
+            </span>
+            <span class="related-title">{post.title}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </aside>
+)}
+
+<style>
+  .related-posts {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .related-posts h2 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    color: var(--muted);
+  }
+
+  .related-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .related-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.875rem 1rem;
+    background: var(--card);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .related-item:hover {
+    background: var(--line);
+  }
+
+  .related-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .related-date {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .related-title {
+    font-weight: 500;
+    color: var(--ink);
+  }
+</style>

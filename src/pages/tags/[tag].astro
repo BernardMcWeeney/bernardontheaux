@@ -1,0 +1,58 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getAllTags, getPostsByTag, slugifyTag, getTagFromSlug } from '../../utils/tags';
+import { formatDate } from '../../utils/format';
+
+export async function getStaticPaths() {
+  const tagCounts = await getAllTags();
+  const tags = Array.from(tagCounts.keys());
+
+  return tags.map((tag) => ({
+    params: { tag: slugifyTag(tag) },
+    props: { originalTag: tag },
+  }));
+}
+
+const { tag } = Astro.params;
+const { originalTag } = Astro.props;
+const posts = await getPostsByTag(originalTag);
+
+const collectionLabels: Record<string, string> = {
+  reviews: 'Review',
+  gigs: 'Gig diary',
+  'deep-dives': 'Deep dive',
+  playlists: 'Playlist',
+  notes: 'Listening note',
+};
+---
+
+<Layout
+  title={`${originalTag} | Bernard On The Aux`}
+  description={`All posts tagged with "${originalTag}" — album reviews, gig diaries, deep dives, and more.`}
+>
+  <div class="container">
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Tag</p>
+          <h1>{originalTag}</h1>
+          <p>{posts.length} {posts.length === 1 ? 'post' : 'posts'} with this tag</p>
+        </div>
+        <a class="button ghost" href="/tags/">All tags</a>
+      </div>
+
+      <div class="grid">
+        {posts.map((post) => (
+          <PostCard
+            title={post.title}
+            href={post.href}
+            meta={formatDate(post.date)}
+            excerpt={post.excerpt}
+            label={collectionLabels[post.collection] ?? post.collection}
+          />
+        ))}
+      </div>
+    </section>
+  </div>
+</Layout>

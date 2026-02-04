@@ -1,0 +1,25 @@
+---
+const navItems = [
+  { href: '/', label: 'Home' },
+  { href: '/reviews/', label: 'Reviews' },
+  { href: '/gigs/', label: 'Gigs' },
+  { href: '/deep-dives/', label: 'Deep Dives' },
+  { href: '/playlists/', label: 'Playlists' },
+  { href: '/notes/', label: 'Notes' },
+  { href: '/archive/', label: 'Archive' },
+  { href: '/search/', label: 'Search' },
+];
+---
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      Bernard On The Aux
+      <span class="brand-tag">Listening log & reviews</span>
+    </a>
+    <nav class="nav">
+      {navItems.map((item) => (
+        <a href={item.href}>{item.label}</a>
+      ))}
+    </nav>
+  </div>
+</header>

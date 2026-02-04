@@ -1,0 +1,67 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getAllTags, slugifyTag } from '../../utils/tags';
+
+const tagCounts = await getAllTags();
+const sortedTags = Array.from(tagCounts.entries()).sort((a, b) =>
+  a[0].localeCompare(b[0])
+);
+---
+
+<Layout
+  title="All Tags | Bernard On The Aux"
+  description="Browse all tags used across album reviews, gig diaries, deep dives, playlists, and listening notes."
+>
+  <div class="container">
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h1>Tags</h1>
+          <p>Browse posts by tag. {sortedTags.length} tags across all collections.</p>
+        </div>
+      </div>
+
+      <div class="tag-grid">
+        {sortedTags.map(([tag, count]) => (
+          <a href={`/tags/${slugifyTag(tag)}/`} class="tag-card">
+            <span class="tag-name">{tag}</span>
+            <span class="tag-count">{count} {count === 1 ? 'post' : 'posts'}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .tag-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .tag-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.25rem;
+    background: var(--card);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .tag-card:hover {
+    background: var(--line);
+  }
+
+  .tag-name {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .tag-count {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+</style>

@@ -1,0 +1,103 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import RelatedPosts from '../../components/RelatedPosts.astro';
+import { getCollection } from 'astro:content';
+import { formatDate } from '../../utils/format';
+import { slugifyTag } from '../../utils/tags';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('gigs');
+  return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const tags = entry.data.tags ?? [];
+---
+
+<Layout
+  title={`${entry.data.title} | Bernard On The Aux`}
+  description={entry.data.excerpt ?? 'Gig diary from Bernard On The Aux.'}
+  image={entry.data.cover}
+  type="article"
+  publishedTime={entry.data.event_date}
+  tags={tags}
+>
+  <div class="container">
+    <article class="post">
+      <header class="post-header">
+        <p class="eyebrow">Gig diary</p>
+        <h1 class="post-title">{entry.data.title}</h1>
+        <div class="post-meta">
+          <span>{formatDate(entry.data.event_date)}</span>
+          <span>{entry.data.venue}</span>
+          <span>{entry.data.city}</span>
+        </div>
+      </header>
+
+      <dl class="meta-grid">
+        {entry.data.tour && (
+          <div>
+            <dt>Tour</dt>
+            <dd>{entry.data.tour}</dd>
+          </div>
+        )}
+        {entry.data.support && (
+          <div>
+            <dt>Support</dt>
+            <dd>{entry.data.support}</dd>
+          </div>
+        )}
+        {entry.data.highlights && (
+          <div>
+            <dt>Highlights</dt>
+            <dd>{entry.data.highlights}</dd>
+          </div>
+        )}
+        {tags.length > 0 && (
+          <div>
+            <dt>Tags</dt>
+            <dd class="tag-list">
+              {tags.map((tag) => (
+                <a href={`/tags/${slugifyTag(tag)}/`} class="tag-link">{tag}</a>
+              ))}
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      <div class="post-body">
+        <Content />
+      </div>
+
+      <RelatedPosts
+        currentSlug={entry.slug}
+        currentCollection="gigs"
+        currentTags={tags}
+        currentArtist={entry.data.artist}
+      />
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tag-link {
+    padding: 0.25rem 0.5rem;
+    background: var(--card);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    text-decoration: none;
+    color: var(--ink);
+    transition: background 0.15s ease;
+  }
+
+  .tag-link:hover {
+    background: var(--line);
+  }
+</style>

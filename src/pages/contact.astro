@@ -1,0 +1,86 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Contact | Bernard On The Aux"
+  description="Get in touch with Bernard On The Aux."
+>
+  <div class="container">
+    <article class="post">
+      <header class="post-header">
+        <p class="eyebrow">Contact</p>
+        <h1 class="post-title">Get in touch</h1>
+      </header>
+
+      <div class="post-body prose">
+        <p>
+          Want to share a record recommendation, suggest a deep dive topic,
+          report an issue with the site, or just say hello?
+        </p>
+
+        <p>
+          The best way to reach me is by email:
+        </p>
+
+        <p class="email-link">
+          <a href="mailto:hello@bernardontheaux.com">hello@bernardontheaux.com</a>
+        </p>
+
+        <p>
+          I read everything, though responses might take a few days.
+          If you're sending a recommendation, a few sentences about why you think
+          the record is worth hearing goes a long way.
+        </p>
+
+        <h2>What I'm not looking for</h2>
+        <ul>
+          <li>Press releases or promotional blasts</li>
+          <li>Requests to "feature" or "review" in exchange for payment</li>
+          <li>SEO link exchange offers</li>
+        </ul>
+
+        <p>
+          This is a personal project, not a publication with a submissions inbox.
+          That said, genuine music recommendations from real listeners are always welcome.
+        </p>
+      </div>
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .prose h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+  }
+
+  .prose ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .prose li {
+    margin-bottom: 0.5rem;
+  }
+
+  .email-link {
+    margin: 1.5rem 0;
+  }
+
+  .email-link a {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--ink);
+    color: var(--bg);
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-weight: 500;
+    transition: opacity 0.15s ease;
+  }
+
+  .email-link a:hover {
+    opacity: 0.85;
+  }
+</style>

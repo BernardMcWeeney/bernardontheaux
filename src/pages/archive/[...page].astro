@@ -1,0 +1,93 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import Layout from '../../layouts/Layout.astro';
+import Pagination from '../../components/Pagination.astro';
+import { getCollection } from 'astro:content';
+import { formatDate } from '../../utils/format';
+
+interface ArchiveItem {
+  title: string;
+  date: Date;
+  kind: string;
+  href: string;
+}
+
+export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
+  const isPublished = (entry: any) => entry.data.published !== false;
+
+  const reviews = (await getCollection('reviews')).filter(isPublished).map((entry) => ({
+    title: `${entry.data.artist} — ${entry.data.title}`,
+    date: entry.data.review_date,
+    kind: 'Review',
+    href: `/reviews/${entry.slug}/`,
+  }));
+
+  const gigs = (await getCollection('gigs')).filter(isPublished).map((entry) => ({
+    title: entry.data.title,
+    date: entry.data.event_date,
+    kind: 'Gig diary',
+    href: `/gigs/${entry.slug}/`,
+  }));
+
+  const deepDives = (await getCollection('deep-dives')).filter(isPublished).map((entry) => ({
+    title: entry.data.title,
+    date: entry.data.published_on,
+    kind: 'Deep dive',
+    href: `/deep-dives/${entry.slug}/`,
+  }));
+
+  const playlists = (await getCollection('playlists')).filter(isPublished).map((entry) => ({
+    title: entry.data.title,
+    date: entry.data.published_on,
+    kind: 'Playlist',
+    href: `/playlists/${entry.slug}/`,
+  }));
+
+  const notes = (await getCollection('notes')).filter(isPublished).map((entry) => ({
+    title: entry.data.title,
+    date: entry.data.listened_on,
+    kind: 'Listening note',
+    href: `/notes/${entry.slug}/`,
+  }));
+
+  const items = [...reviews, ...gigs, ...deepDives, ...playlists, ...notes].sort(
+    (a, b) => b.date.valueOf() - a.date.valueOf()
+  );
+
+  return paginate(items, { pageSize: 20 });
+};
+
+interface Props {
+  page: Page<ArchiveItem>;
+}
+
+const { page } = Astro.props;
+---
+
+<Layout title="Archive | Bernard On The Aux" description="A structured archive of music that has been properly listened to.">
+  <div class="container">
+    <header class="page-header">
+      <p class="eyebrow">Archive</p>
+      <h1>Archive</h1>
+      <p>A structured archive of music that's been properly listened to.</p>
+    </header>
+
+    <ul class="archive-list">
+      {page.data.map((item) => (
+        <li class="archive-item">
+          <div class="archive-meta">
+            <span class="pill">{item.kind}</span>
+            <span>{formatDate(item.date)}</span>
+          </div>
+          <a href={item.href}>{item.title}</a>
+        </li>
+      ))}
+    </ul>
+
+    <Pagination
+      currentPage={page.currentPage}
+      totalPages={page.lastPage}
+      baseUrl="/archive/"
+    />
+  </div>
+</Layout>

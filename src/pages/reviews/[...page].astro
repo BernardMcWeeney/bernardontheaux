@@ -1,0 +1,51 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import Layout from '../../layouts/Layout.astro';
+import PostCard from '../../components/PostCard.astro';
+import Pagination from '../../components/Pagination.astro';
+import { getCollection } from 'astro:content';
+import { formatDate } from '../../utils/format';
+
+export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
+  const reviews = (await getCollection('reviews'))
+    .filter((entry) => entry.data.published !== false)
+    .sort((a, b) => b.data.review_date.valueOf() - a.data.review_date.valueOf());
+
+  return paginate(reviews, { pageSize: 12 });
+};
+
+interface Props {
+  page: Page;
+}
+
+const { page } = Astro.props;
+---
+
+<Layout title="Album Reviews | Bernard On The Aux" description="Album reviews with context, restraint, and full-album listening notes.">
+  <div class="container">
+    <header class="page-header">
+      <p class="eyebrow">Album reviews</p>
+      <h1>Reviews</h1>
+      <p>Full-album listening notes for new releases and older records revisited.</p>
+    </header>
+
+    <div class="grid">
+      {page.data.map((entry) => (
+        <PostCard
+          title={`${entry.data.artist} — ${entry.data.title}`}
+          href={`/reviews/${entry.slug}/`}
+          meta={`${formatDate(entry.data.review_date)} • ${entry.data.rating}/10`}
+          excerpt={entry.data.excerpt}
+          label="Review"
+          cover={entry.data.cover}
+        />
+      ))}
+    </div>
+
+    <Pagination
+      currentPage={page.currentPage}
+      totalPages={page.lastPage}
+      baseUrl="/reviews/"
+    />
+  </div>
+</Layout>

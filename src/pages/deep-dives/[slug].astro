@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import RelatedPosts from '../../components/RelatedPosts.astro';
+import { getCollection } from 'astro:content';
+import { formatDate } from '../../utils/format';
+import { slugifyTag } from '../../utils/tags';
+import { calculateReadingTime, formatReadingTime } from '../../utils/readingTime';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('deep-dives');
+  return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const tags = entry.data.tags ?? [];
+const readingTime = formatReadingTime(calculateReadingTime(entry.body));
+---
+
+<Layout
+  title={`${entry.data.title} | Bernard On The Aux`}
+  description={entry.data.excerpt ?? 'Deep dive from Bernard On The Aux.'}
+  image={entry.data.cover}
+  type="article"
+  publishedTime={entry.data.published_on}
+  tags={tags}
+>
+  <div class="container">
+    <article class="post">
+      <header class="post-header">
+        <p class="eyebrow">Deep dive</p>
+        <h1 class="post-title">{entry.data.title}</h1>
+        <div class="post-meta">
+          <span>{formatDate(entry.data.published_on)}</span>
+          <span>{readingTime}</span>
+          {entry.data.topic && <span>{entry.data.topic}</span>}
+          {entry.data.era && <span>{entry.data.era}</span>}
+        </div>
+      </header>
+
+      <dl class="meta-grid">
+        {tags.length > 0 && (
+          <div>
+            <dt>Tags</dt>
+            <dd class="tag-list">
+              {tags.map((tag) => (
+                <a href={`/tags/${slugifyTag(tag)}/`} class="tag-link">{tag}</a>
+              ))}
+            </dd>
+          </div>
+        )}
+      </dl>
+
+      <div class="post-body">
+        <Content />
+      </div>
+
+      <RelatedPosts
+        currentSlug={entry.slug}
+        currentCollection="deep-dives"
+        currentTags={tags}
+      />
+    </article>
+  </div>
+</Layout>
+
+<style>
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tag-link {
+    padding: 0.25rem 0.5rem;
+    background: var(--card);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    text-decoration: none;
+    color: var(--ink);
+    transition: background 0.15s ease;
+  }
+
+  .tag-link:hover {
+    background: var(--line);
+  }
+</style>

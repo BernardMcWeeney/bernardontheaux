@@ -1,11 +1,261 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import PostCard from '../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+import { formatDate } from '../utils/format';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const isPublished = (entry) => entry.data.published !== false;
+const sortByDateField = (field) => (a, b) => b.data[field].valueOf() - a.data[field].valueOf();
+
+const reviews = (await getCollection('reviews')).filter(isPublished).sort(sortByDateField('review_date'));
+const gigs = (await getCollection('gigs')).filter(isPublished).sort(sortByDateField('event_date'));
+const deepDives = (await getCollection('deep-dives')).filter(isPublished).sort(sortByDateField('published_on'));
+const playlists = (await getCollection('playlists')).filter(isPublished).sort(sortByDateField('published_on'));
+const notes = (await getCollection('notes')).filter(isPublished).sort(sortByDateField('listened_on'));
+
+// Pinned reviews (max 2)
+const pinnedReviews = reviews.filter((r) => r.data.pinned).slice(0, 2);
+
+// Featured posts from any collection (max 4)
+const featuredPosts = [
+  ...reviews.filter((r) => r.data.featured && !r.data.pinned).map((r) => ({
+    type: 'review',
+    entry: r,
+    date: r.data.review_date,
+  })),
+  ...gigs.filter((g) => g.data.featured).map((g) => ({
+    type: 'gig',
+    entry: g,
+    date: g.data.event_date,
+  })),
+  ...deepDives.filter((d) => d.data.featured).map((d) => ({
+    type: 'deep-dive',
+    entry: d,
+    date: d.data.published_on,
+  })),
+  ...playlists.filter((p) => p.data.featured).map((p) => ({
+    type: 'playlist',
+    entry: p,
+    date: p.data.published_on,
+  })),
+  ...notes.filter((n) => n.data.featured).map((n) => ({
+    type: 'note',
+    entry: n,
+    date: n.data.listened_on,
+  })),
+].sort((a, b) => b.date.valueOf() - a.date.valueOf()).slice(0, 4);
+
+// Regular latest reviews (exclude pinned)
+const latestReviews = reviews.filter((r) => !r.data.pinned).slice(0, 3);
+
+// Latest from other collections
+const latestGig = gigs[0];
+const latestDeepDive = deepDives[0];
+const latestPlaylist = playlists[0];
+const latestNote = notes[0];
+
+const hasPinnedOrFeatured = pinnedReviews.length > 0 || featuredPosts.length > 0;
 ---
 
-<Layout>
-	<Welcome />
+<Layout
+  title="Bernard On The Aux | Listening log and album reviews"
+  description="Bernard On The Aux is a personal, passion-driven music review and listening log. Album reviews, gig diaries, deep dives, and listening notes."
+>
+  <div class="container">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Personal listening log</p>
+        <h1>Bernard On The Aux</h1>
+        <p class="lead">
+          Bernard on the Aux is a personal, passion-driven music review and listening log. It prioritizes
+          listening, context, and memory over speed, hype, or blanket coverage.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="/reviews/">Start with album reviews</a>
+          <a class="button ghost" href="/archive/">Browse the archive</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <p class="eyebrow">What it focuses on</p>
+        <ul class="focus-list">
+          <li>Album reviews (the core output)</li>
+          <li>Gig reviews and concert diaries</li>
+          <li>Deep dives on artists, genres, and eras</li>
+          <li>Playlists tied to moods and posts</li>
+          <li>Short listening notes when they matter</li>
+        </ul>
+      </div>
+    </section>
+
+    {pinnedReviews.length > 0 && (
+      <section class="section pinned-section">
+        <div class="section-head">
+          <div>
+            <h2>Pinned</h2>
+            <p>Currently highlighted reviews.</p>
+          </div>
+        </div>
+        <div class="grid">
+          {pinnedReviews.map((entry) => (
+            <PostCard
+              title={`${entry.data.artist} — ${entry.data.title}`}
+              href={`/reviews/${entry.slug}/`}
+              meta={`${formatDate(entry.data.review_date)} • ${entry.data.rating}/10`}
+              excerpt={entry.data.excerpt}
+              label="Pinned"
+              cover={entry.data.cover}
+            />
+          ))}
+        </div>
+      </section>
+    )}
+
+    {featuredPosts.length > 0 && (
+      <section class="section featured-section">
+        <div class="section-head">
+          <div>
+            <h2>Featured</h2>
+            <p>Recommended reads from across the site.</p>
+          </div>
+        </div>
+        <div class="grid">
+          {featuredPosts.map(({ type, entry }) => {
+            if (type === 'review') {
+              return (
+                <PostCard
+                  title={`${entry.data.artist} — ${entry.data.title}`}
+                  href={`/reviews/${entry.slug}/`}
+                  meta={`${formatDate(entry.data.review_date)} • ${entry.data.rating}/10`}
+                  excerpt={entry.data.excerpt}
+                  label="Featured review"
+                  cover={entry.data.cover}
+                />
+              );
+            }
+            if (type === 'gig') {
+              return (
+                <PostCard
+                  title={entry.data.title}
+                  href={`/gigs/${entry.slug}/`}
+                  meta={`${formatDate(entry.data.event_date)} • ${entry.data.city}`}
+                  excerpt={entry.data.excerpt}
+                  label="Featured gig"
+                  cover={entry.data.cover}
+                />
+              );
+            }
+            if (type === 'deep-dive') {
+              return (
+                <PostCard
+                  title={entry.data.title}
+                  href={`/deep-dives/${entry.slug}/`}
+                  meta={formatDate(entry.data.published_on)}
+                  excerpt={entry.data.excerpt}
+                  label="Featured dive"
+                  cover={entry.data.cover}
+                />
+              );
+            }
+            if (type === 'playlist') {
+              return (
+                <PostCard
+                  title={entry.data.title}
+                  href={`/playlists/${entry.slug}/`}
+                  meta={`${formatDate(entry.data.published_on)} • ${entry.data.platform}`}
+                  excerpt={entry.data.excerpt}
+                  label="Featured playlist"
+                  cover={entry.data.cover}
+                />
+              );
+            }
+            if (type === 'note') {
+              return (
+                <PostCard
+                  title={entry.data.title}
+                  href={`/notes/${entry.slug}/`}
+                  meta={formatDate(entry.data.listened_on)}
+                  excerpt={entry.data.excerpt}
+                  label="Featured note"
+                  cover={entry.data.cover}
+                />
+              );
+            }
+          })}
+        </div>
+      </section>
+    )}
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>Latest album reviews</h2>
+          <p>Slow, full-album listening notes. New releases and older records revisited.</p>
+        </div>
+        <a class="button ghost" href="/reviews/">All reviews</a>
+      </div>
+      <div class="grid">
+        {latestReviews.map((entry) => (
+          <PostCard
+            title={`${entry.data.artist} — ${entry.data.title}`}
+            href={`/reviews/${entry.slug}/`}
+            meta={`${formatDate(entry.data.review_date)} • ${entry.data.rating}/10`}
+            excerpt={entry.data.excerpt}
+            label="Review"
+            cover={entry.data.cover}
+          />
+        ))}
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <h2>From the field</h2>
+          <p>Gig diaries, deep dives, playlists, and quick notes that round out the listening log.</p>
+        </div>
+      </div>
+      <div class="grid">
+        {latestGig && (
+          <PostCard
+            title={latestGig.data.title}
+            href={`/gigs/${latestGig.slug}/`}
+            meta={`${formatDate(latestGig.data.event_date)} • ${latestGig.data.city}`}
+            excerpt={latestGig.data.excerpt}
+            label="Gig diary"
+            cover={latestGig.data.cover}
+          />
+        )}
+        {latestDeepDive && (
+          <PostCard
+            title={latestDeepDive.data.title}
+            href={`/deep-dives/${latestDeepDive.slug}/`}
+            meta={formatDate(latestDeepDive.data.published_on)}
+            excerpt={latestDeepDive.data.excerpt}
+            label="Deep dive"
+            cover={latestDeepDive.data.cover}
+          />
+        )}
+        {latestPlaylist && (
+          <PostCard
+            title={latestPlaylist.data.title}
+            href={`/playlists/${latestPlaylist.slug}/`}
+            meta={`${formatDate(latestPlaylist.data.published_on)} • ${latestPlaylist.data.platform}`}
+            excerpt={latestPlaylist.data.excerpt}
+            label="Playlist"
+            cover={latestPlaylist.data.cover}
+          />
+        )}
+        {latestNote && (
+          <PostCard
+            title={latestNote.data.title}
+            href={`/notes/${latestNote.slug}/`}
+            meta={formatDate(latestNote.data.listened_on)}
+            excerpt={latestNote.data.excerpt}
+            label="Listening note"
+            cover={latestNote.data.cover}
+          />
+        )}
+      </div>
+    </section>
+  </div>
 </Layout>
