@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
 import { getAllTags, slugifyTag } from '../../utils/tags';
 
 const tagCounts = await getAllTags();
@@ -13,23 +14,26 @@ const sortedTags = Array.from(tagCounts.entries()).sort((a, b) =>
   description="Browse all tags used across album reviews, gig diaries, deep dives, playlists, and listening notes."
 >
   <div class="container">
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <h1>Tags</h1>
-          <p>Browse posts by tag. {sortedTags.length} tags across all collections.</p>
-        </div>
-      </div>
+    <header class="page-header">
+      <p class="eyebrow">Browse by tag</p>
+      <h1 class="title-with-icon">
+        <Icon name="radio" class="title-icon" />
+        Tags
+      </h1>
+      <p>{sortedTags.length} tags across all collections.</p>
+    </header>
 
-      <div class="tag-grid">
-        {sortedTags.map(([tag, count]) => (
-          <a href={`/tags/${slugifyTag(tag)}/`} class="tag-card">
-            <span class="tag-name">{tag}</span>
-            <span class="tag-count">{count} {count === 1 ? 'post' : 'posts'}</span>
-          </a>
-        ))}
-      </div>
-    </section>
+    <div class="tag-grid">
+      {sortedTags.map(([tag, count]) => (
+        <a href={`/tags/${slugifyTag(tag)}/`} class="tag-card">
+          <span class="tag-name">
+            <Icon name="music" class="tag-icon" />
+            {tag}
+          </span>
+          <span class="tag-count">{count} {count === 1 ? 'post' : 'posts'}</span>
+        </a>
+      ))}
+    </div>
   </div>
 </Layout>
 
@@ -37,31 +41,44 @@ const sortedTags = Array.from(tagCounts.entries()).sort((a, b) =>
   .tag-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
+    gap: 0.8rem;
   }
 
   .tag-card {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    padding: 1rem 1.25rem;
-    background: var(--card);
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius);
-    text-decoration: none;
-    transition: background 0.15s ease;
+    background: var(--card);
+    transition: border-color 0.15s ease, background 0.15s ease;
   }
-
   .tag-card:hover {
-    background: var(--line);
+    border-color: var(--ink);
+    background: var(--accent-soft);
+    color: inherit;
   }
 
   .tag-name {
-    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
     color: var(--ink);
+    font-size: 0.95rem;
+  }
+
+  .tag-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    color: var(--accent);
   }
 
   .tag-count {
-    font-size: 0.875rem;
+    font-size: 0.78rem;
     color: var(--muted);
+    font-family: var(--font-label);
+    letter-spacing: 0.05em;
   }
 </style>

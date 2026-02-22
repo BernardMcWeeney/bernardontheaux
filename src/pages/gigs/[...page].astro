@@ -1,51 +1,136 @@
 ---
-import type { GetStaticPaths, Page } from 'astro';
 import Layout from '../../layouts/Layout.astro';
 import PostCard from '../../components/PostCard.astro';
-import Pagination from '../../components/Pagination.astro';
+import Icon from '../../components/Icon.astro';
 import { getCollection } from 'astro:content';
 import { formatDate } from '../../utils/format';
 
-export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
-  const gigs = (await getCollection('gigs'))
-    .filter((entry) => entry.data.published !== false)
-    .sort((a, b) => b.data.event_date.valueOf() - a.data.event_date.valueOf());
-
-  return paginate(gigs, { pageSize: 12 });
-};
-
-interface Props {
-  page: Page;
+export async function getStaticPaths() {
+  return [{ params: { page: undefined } }];
 }
 
-const { page } = Astro.props;
+const gigs = (await getCollection('gigs'))
+  .filter((entry) => entry.data.published !== false)
+  .sort((a, b) => b.data.event_date.valueOf() - a.data.event_date.valueOf());
+
+const allYears = [...new Set(gigs.map((g) => g.data.event_date.getFullYear()))].sort((a, b) => b - a);
+const allCities = [...new Set(gigs.map((g) => g.data.city))].sort();
+const allVenues = [...new Set(gigs.map((g) => g.data.venue))].sort();
+const allTags = [...new Set(gigs.flatMap((g) => g.data.tags ?? []))].sort();
 ---
 
 <Layout title="Gig Diaries | Bernard On The Aux" description="Concert diaries and gig reviews for shows actually attended.">
   <div class="container">
-    <header class="page-header">
-      <p class="eyebrow">Gig reviews</p>
-      <h1>Gigs</h1>
+    <header class="page-header page-header-gig">
+      <p class="eyebrow">Gig diaries</p>
+      <h1 class="title-with-icon">
+        <Icon name="gig" class="title-icon" />
+        Gigs
+      </h1>
       <p>Concert diaries for shows actually attended. The room, the set, the memory.</p>
     </header>
 
-    <div class="grid">
-      {page.data.map((entry) => (
-        <PostCard
-          title={entry.data.title}
-          href={`/gigs/${entry.slug}/`}
-          meta={`${formatDate(entry.data.event_date)} • ${entry.data.city}`}
-          excerpt={entry.data.excerpt}
-          label="Gig diary"
-          cover={entry.data.cover}
-        />
-      ))}
+    <div class="filter-bar">
+      {allYears.length > 1 && (
+        <div class="filter-group">
+          <span class="filter-label">Year</span>
+          <select class="filter-select" data-filter="year">
+            <option value="all">All</option>
+            {allYears.map((y) => (
+              <option value={String(y)}>{y}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      {allCities.length > 1 && (
+        <div class="filter-group">
+          <span class="filter-label">City</span>
+          <select class="filter-select" data-filter="city">
+            <option value="all">All</option>
+            {allCities.map((c) => (
+              <option value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      {allVenues.length > 1 && (
+        <div class="filter-group">
+          <span class="filter-label">Venue</span>
+          <select class="filter-select" data-filter="venue">
+            <option value="all">All</option>
+            {allVenues.map((v) => (
+              <option value={v}>{v}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      {allTags.length > 0 && (
+        <div class="filter-group">
+          <span class="filter-label">Tags</span>
+          <select class="filter-select" data-filter="tag">
+            <option value="all">All</option>
+            {allTags.map((t) => (
+              <option value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      <span class="filter-count" id="filter-count">{gigs.length} gigs</span>
     </div>
 
-    <Pagination
-      currentPage={page.currentPage}
-      totalPages={page.lastPage}
-      baseUrl="/gigs/"
-    />
+    <div class="grid" id="filterable-grid">
+      {gigs.map((entry) => (
+        <div
+          class="filterable-card"
+          data-year={String(entry.data.event_date.getFullYear())}
+          data-city={entry.data.city}
+          data-venue={entry.data.venue}
+          data-tags={(entry.data.tags ?? []).join(',')}
+        >
+          <PostCard
+            title={entry.data.title}
+            href={`/gigs/${entry.slug}/`}
+            meta={`${formatDate(entry.data.event_date)} · ${entry.data.city}`}
+            excerpt={entry.data.excerpt}
+            label="Gig"
+            cover={entry.data.cover}
+            pillClass="pill-gig"
+          />
+        </div>
+      ))}
+    </div>
   </div>
 </Layout>
+
+<script>
+  const filters: Record<string, string> = {};
+  const selects = document.querySelectorAll<HTMLSelectElement>('.filter-select');
+  const cards = document.querySelectorAll<HTMLElement>('.filterable-card');
+  const countEl = document.getElementById('filter-count');
+
+  selects.forEach((sel) => {
+    sel.addEventListener('change', () => {
+      const group = sel.dataset.filter!;
+      const value = sel.value;
+      if (value === 'all') { delete filters[group]; } else { filters[group] = value; }
+      applyFilters();
+    });
+  });
+
+  function applyFilters() {
+    let visible = 0;
+    cards.forEach((card) => {
+      let show = true;
+      if (filters.year) show = card.dataset.year === filters.year;
+      if (show && filters.city) show = card.dataset.city === filters.city;
+      if (show && filters.venue) show = card.dataset.venue === filters.venue;
+      if (show && filters.tag) {
+        const tags = (card.dataset.tags ?? '').split(',');
+        show = tags.includes(filters.tag);
+      }
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    if (countEl) countEl.textContent = `${visible} gig${visible !== 1 ? 's' : ''}`;
+  }
+</script>

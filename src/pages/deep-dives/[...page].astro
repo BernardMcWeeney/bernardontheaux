@@ -1,51 +1,94 @@
 ---
-import type { GetStaticPaths, Page } from 'astro';
 import Layout from '../../layouts/Layout.astro';
 import PostCard from '../../components/PostCard.astro';
-import Pagination from '../../components/Pagination.astro';
+import Icon from '../../components/Icon.astro';
 import { getCollection } from 'astro:content';
 import { formatDate } from '../../utils/format';
 
-export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
-  const deepDives = (await getCollection('deep-dives'))
-    .filter((entry) => entry.data.published !== false)
-    .sort((a, b) => b.data.published_on.valueOf() - a.data.published_on.valueOf());
-
-  return paginate(deepDives, { pageSize: 12 });
-};
-
-interface Props {
-  page: Page;
+export async function getStaticPaths() {
+  return [{ params: { page: undefined } }];
 }
 
-const { page } = Astro.props;
+const deepDives = (await getCollection('deep-dives'))
+  .filter((entry) => entry.data.published !== false)
+  .sort((a, b) => b.data.published_on.valueOf() - a.data.published_on.valueOf());
+
+const allTags = [...new Set(deepDives.flatMap((d) => d.data.tags ?? []))].sort();
 ---
 
 <Layout title="Deep Dives | Bernard On The Aux" description="Longer reads on artists, genres, and eras worth the time.">
   <div class="container">
-    <header class="page-header">
+    <header class="page-header page-header-dive">
       <p class="eyebrow">Deep dives</p>
-      <h1>Deep Dives</h1>
+      <h1 class="title-with-icon">
+        <Icon name="dive" class="title-icon" />
+        Deep Dives
+      </h1>
       <p>Longer reads on artists, genres, and eras that deserve a slower pace.</p>
     </header>
 
-    <div class="grid">
-      {page.data.map((entry) => (
-        <PostCard
-          title={entry.data.title}
-          href={`/deep-dives/${entry.slug}/`}
-          meta={formatDate(entry.data.published_on)}
-          excerpt={entry.data.excerpt}
-          label="Deep dive"
-          cover={entry.data.cover}
-        />
+    {allTags.length > 0 && (
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Tags</span>
+          <select class="filter-select" data-filter="tag">
+            <option value="all">All</option>
+            {allTags.map((t) => (
+              <option value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+        <span class="filter-count" id="filter-count">{deepDives.length} deep dives</span>
+      </div>
+    )}
+
+    <div class="grid" id="filterable-grid">
+      {deepDives.map((entry) => (
+        <div
+          class="filterable-card"
+          data-tags={(entry.data.tags ?? []).join(',')}
+        >
+          <PostCard
+            title={entry.data.title}
+            href={`/deep-dives/${entry.slug}/`}
+            meta={formatDate(entry.data.published_on)}
+            excerpt={entry.data.excerpt}
+            label="Deep Dive"
+            cover={entry.data.cover}
+            pillClass="pill-dive"
+          />
+        </div>
       ))}
     </div>
-
-    <Pagination
-      currentPage={page.currentPage}
-      totalPages={page.lastPage}
-      baseUrl="/deep-dives/"
-    />
   </div>
 </Layout>
+
+<script>
+  const filters: Record<string, string> = {};
+  const selects = document.querySelectorAll<HTMLSelectElement>('.filter-select');
+  const cards = document.querySelectorAll<HTMLElement>('.filterable-card');
+  const countEl = document.getElementById('filter-count');
+
+  selects.forEach((sel) => {
+    sel.addEventListener('change', () => {
+      const group = sel.dataset.filter!;
+      const value = sel.value;
+      if (value === 'all') { delete filters[group]; } else { filters[group] = value; }
+      applyFilters();
+    });
+  });
+
+  function applyFilters() {
+    let visible = 0;
+    cards.forEach((card) => {
+      let show = true;
+      if (filters.tag) {
+        const tags = (card.dataset.tags ?? '').split(',');
+        show = tags.includes(filters.tag);
+      }
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    if (countEl) countEl.textContent = `${visible} deep dive${visible !== 1 ? 's' : ''}`;
+  }
+</script>

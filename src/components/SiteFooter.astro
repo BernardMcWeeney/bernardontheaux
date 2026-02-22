@@ -1,18 +1,34 @@
+---
+import Icon from './Icon.astro';
+---
 <footer class="site-footer">
-  <div class="container footer-inner">
-    <div>
-      <p class="footer-title">Bernard On The Aux</p>
-      <p class="footer-text">A personal, passion-driven music review and listening log. Slow listening over fast takes.</p>
+  <div class="container">
+    <div class="footer-icons" aria-hidden="true">
+      <Icon name="turntable" />
+      <Icon name="vinyl" />
+      <Icon name="cassette" />
+      <Icon name="cd" />
+      <Icon name="speaker" />
+      <Icon name="radio" />
+      <Icon name="headphones" />
     </div>
-    <div class="footer-links">
-      <a href="/reviews/">Album reviews</a>
-      <a href="/gigs/">Concert diaries</a>
-      <a href="/deep-dives/">Deep dives</a>
-      <a href="/archive/">Archive</a>
-      <a href="/about/">About</a>
-      <a href="/contact/">Contact</a>
-      <a href="/privacy/">Privacy</a>
-      <a href="/rss.xml">RSS</a>
+    <div class="footer-inner">
+      <div>
+        <p class="footer-title">Bernard On The Aux</p>
+        <p class="footer-text">A modern-gothic music blog built on slow listening, memory, and records worth replaying.</p>
+      </div>
+      <div class="footer-links">
+        <a href="/reviews/">Reviews</a>
+        <a href="/gigs/">Gigs</a>
+        <a href="/deep-dives/">Deep Dives</a>
+        <a href="/playlists/">Playlists</a>
+        <a href="/archive/">Archive</a>
+        <a href="/about/">About</a>
+        <a href="/rss.xml">RSS</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      ♦ Full albums · Room tone · Repeat spins ♦
     </div>
   </div>
 </footer>

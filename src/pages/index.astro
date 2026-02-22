@@ -1,11 +1,12 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PostCard from '../components/PostCard.astro';
+import Icon from '../components/Icon.astro';
 import { getCollection } from 'astro:content';
 import { formatDate } from '../utils/format';
 
-const isPublished = (entry) => entry.data.published !== false;
-const sortByDateField = (field) => (a, b) => b.data[field].valueOf() - a.data[field].valueOf();
+const isPublished = (entry: any) => entry.data.published !== false;
+const sortByDateField = (field: string) => (a: any, b: any) => b.data[field].valueOf() - a.data[field].valueOf();
 
 const reviews = (await getCollection('reviews')).filter(isPublished).sort(sortByDateField('review_date'));
 const gigs = (await getCollection('gigs')).filter(isPublished).sort(sortByDateField('event_date'));
@@ -13,86 +14,228 @@ const deepDives = (await getCollection('deep-dives')).filter(isPublished).sort(s
 const playlists = (await getCollection('playlists')).filter(isPublished).sort(sortByDateField('published_on'));
 const notes = (await getCollection('notes')).filter(isPublished).sort(sortByDateField('listened_on'));
 
-// Pinned reviews (max 2)
-const pinnedReviews = reviews.filter((r) => r.data.pinned).slice(0, 2);
-
-// Featured posts from any collection (max 4)
-const featuredPosts = [
-  ...reviews.filter((r) => r.data.featured && !r.data.pinned).map((r) => ({
-    type: 'review',
-    entry: r,
+/* ── Slider: latest 6 posts across all collections ── */
+const sliderPosts = [
+  ...reviews.slice(0, 3).map((r) => ({
+    type: 'review' as const,
+    title: `${r.data.artist} — ${r.data.title}`,
+    href: `/reviews/${r.slug}/`,
+    meta: `${formatDate(r.data.review_date)} · ${r.data.rating}/10`,
+    excerpt: r.data.excerpt,
+    cover: r.data.cover,
     date: r.data.review_date,
+    icon: 'review',
+    label: 'Review',
+    pillClass: 'pill-review',
   })),
-  ...gigs.filter((g) => g.data.featured).map((g) => ({
-    type: 'gig',
-    entry: g,
+  ...gigs.slice(0, 2).map((g) => ({
+    type: 'gig' as const,
+    title: g.data.title,
+    href: `/gigs/${g.slug}/`,
+    meta: `${formatDate(g.data.event_date)} · ${g.data.city}`,
+    excerpt: g.data.excerpt,
+    cover: g.data.cover,
     date: g.data.event_date,
+    icon: 'gig',
+    label: 'Gig',
+    pillClass: 'pill-gig',
   })),
-  ...deepDives.filter((d) => d.data.featured).map((d) => ({
-    type: 'deep-dive',
-    entry: d,
+  ...deepDives.slice(0, 1).map((d) => ({
+    type: 'deep-dive' as const,
+    title: d.data.title,
+    href: `/deep-dives/${d.slug}/`,
+    meta: formatDate(d.data.published_on),
+    excerpt: d.data.excerpt,
+    cover: d.data.cover,
     date: d.data.published_on,
+    icon: 'dive',
+    label: 'Deep Dive',
+    pillClass: 'pill-dive',
   })),
-  ...playlists.filter((p) => p.data.featured).map((p) => ({
-    type: 'playlist',
-    entry: p,
-    date: p.data.published_on,
-  })),
-  ...notes.filter((n) => n.data.featured).map((n) => ({
-    type: 'note',
-    entry: n,
-    date: n.data.listened_on,
-  })),
-].sort((a, b) => b.date.valueOf() - a.date.valueOf()).slice(0, 4);
+].sort((a, b) => b.date.valueOf() - a.date.valueOf()).slice(0, 6);
 
-// Regular latest reviews (exclude pinned)
+/* ── Signal board data ── */
+const latestReview = reviews[0];
+const latestNote = notes[0];
+const latestPlaylist = playlists[0];
+
+const newestReviewDate = latestReview?.data.review_date;
+const albumMonthPool = newestReviewDate
+  ? reviews.filter((entry) =>
+      entry.data.review_date.getFullYear() === newestReviewDate.getFullYear() &&
+      entry.data.review_date.getMonth() === newestReviewDate.getMonth()
+    )
+  : [];
+
+const albumOfMonth = [...(albumMonthPool.length > 0 ? albumMonthPool : reviews)]
+  .sort((a, b) => {
+    if (b.data.rating !== a.data.rating) return b.data.rating - a.data.rating;
+    return b.data.review_date.valueOf() - a.data.review_date.valueOf();
+  })[0];
+
+const albumMonthLabel = albumOfMonth
+  ? new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(albumOfMonth.data.review_date)
+  : 'No reviews yet';
+
+const standoutTrack = latestReview?.data.standout_tracks?.split(',').map((t: string) => t.trim()).filter(Boolean)[0];
+const hasTrackPick = Boolean(standoutTrack && latestReview);
+
+const songOfWeekTitle = standoutTrack ?? latestNote?.data.title ?? 'A fresh pick lands soon';
+const songOfWeekSubtitle = hasTrackPick && latestReview
+  ? `${latestReview.data.artist} · from ${latestReview.data.title}`
+  : latestNote?.data.artist ? `${latestNote.data.artist} · listening note` : 'From the listening desk';
+const songOfWeekMeta = hasTrackPick && latestReview
+  ? `Selected this week · ${formatDate(latestReview.data.review_date)}`
+  : latestNote ? `Logged ${formatDate(latestNote.data.listened_on)}` : 'Check back after the next listen';
+const songOfWeekHref = hasTrackPick && latestReview
+  ? `/reviews/${latestReview.slug}/`
+  : latestNote ? `/notes/${latestNote.slug}/` : '/reviews/';
+
+const noteTs = latestNote ? latestNote.data.listened_on.valueOf() : 0;
+const playlistTs = latestPlaylist ? latestPlaylist.data.published_on.valueOf() : 0;
+
+const nowListening = playlistTs > noteTs && latestPlaylist
+  ? { title: latestPlaylist.data.title, subtitle: `${latestPlaylist.data.platform} playlist`, meta: `Updated ${formatDate(latestPlaylist.data.published_on)}`, href: `/playlists/${latestPlaylist.slug}/`, cta: 'Open playlist' }
+  : latestNote
+    ? { title: latestNote.data.title, subtitle: latestNote.data.artist ?? 'Listening note', meta: `Logged ${formatDate(latestNote.data.listened_on)}`, href: `/notes/${latestNote.slug}/`, cta: 'Read note' }
+    : latestReview
+      ? { title: `${latestReview.data.artist} — ${latestReview.data.title}`, subtitle: 'Latest album review', meta: `Reviewed ${formatDate(latestReview.data.review_date)}`, href: `/reviews/${latestReview.slug}/`, cta: 'Read review' }
+      : { title: 'No listen logged yet', subtitle: 'Music in motion', meta: 'New updates coming soon', href: '/archive/', cta: 'Browse archive' };
+
+const formatLinks = [
+  { title: 'Record Reviews', note: 'Full album listening sessions', href: '/reviews/', icon: 'turntable' },
+  { title: 'Playlists', note: 'Curated by mood and moment', href: '/playlists/', icon: 'cassette' },
+  { title: 'Deep Dives', note: 'Context, eras, and sonic detail', href: '/deep-dives/', icon: 'cd' },
+  { title: 'Live Diaries', note: 'Venue notes and set memories', href: '/gigs/', icon: 'speaker' },
+];
+
+/* ── Featured + pinned ── */
+const pinnedReviews = reviews.filter((r) => r.data.pinned).slice(0, 2);
 const latestReviews = reviews.filter((r) => !r.data.pinned).slice(0, 3);
-
-// Latest from other collections
 const latestGig = gigs[0];
 const latestDeepDive = deepDives[0];
-const latestPlaylist = playlists[0];
-const latestNote = notes[0];
-
-const hasPinnedOrFeatured = pinnedReviews.length > 0 || featuredPosts.length > 0;
 ---
 
 <Layout
   title="Bernard On The Aux | Listening log and album reviews"
-  description="Bernard On The Aux is a personal, passion-driven music review and listening log. Album reviews, gig diaries, deep dives, and listening notes."
+  description="Bernard On The Aux is a personal music blog rooted in slow listening: album reviews, gig diaries, deep dives, playlists, and notes."
 >
   <div class="container">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Personal listening log</p>
-        <h1>Bernard On The Aux</h1>
-        <p class="lead">
-          Bernard on the Aux is a personal, passion-driven music review and listening log. It prioritizes
-          listening, context, and memory over speed, hype, or blanket coverage.
-        </p>
-        <div class="hero-actions">
-          <a class="button" href="/reviews/">Start with album reviews</a>
-          <a class="button ghost" href="/archive/">Browse the archive</a>
+
+    <!-- ═══ HERO SLIDER ═══ -->
+    <section class="hero-slider" id="hero-slider">
+      <div class="hero-slider-viewport">
+        <div class="hero-slider-track" id="slider-track">
+          {sliderPosts.map((post) => (
+            <article class="hero-slide">
+              <a class="hero-slide-link" href={post.href}>
+                <div class="hero-slide-media">
+                  {post.cover ? (
+                    <img src={post.cover} alt="" loading="lazy" />
+                  ) : (
+                    <div class="hero-slide-placeholder">
+                      <Icon name={post.icon} size={56} />
+                    </div>
+                  )}
+                </div>
+                <div class="hero-slide-body">
+                  <div class:list={['hero-slide-pill', post.pillClass]}>
+                    <Icon name={post.icon} />
+                    {post.label}
+                  </div>
+                  <h3 class="hero-slide-title">{post.title}</h3>
+                  <p class="hero-slide-meta">{post.meta}</p>
+                  {post.excerpt && <p class="hero-slide-excerpt">{post.excerpt}</p>}
+                </div>
+              </a>
+            </article>
+          ))}
         </div>
       </div>
-      <div class="hero-card">
-        <p class="eyebrow">What it focuses on</p>
-        <ul class="focus-list">
-          <li>Album reviews (the core output)</li>
-          <li>Gig reviews and concert diaries</li>
-          <li>Deep dives on artists, genres, and eras</li>
-          <li>Playlists tied to moods and posts</li>
-          <li>Short listening notes when they matter</li>
-        </ul>
+      <div class="hero-slider-controls">
+        <button class="hero-slider-btn" id="slider-prev" aria-label="Previous slide">&#8249;</button>
+        <div class="hero-slider-dots" id="slider-dots">
+          {sliderPosts.map((_, i) => (
+            <button class:list={['hero-slider-dot', { active: i === 0 }]} data-index={i} aria-label={`Go to slide ${i + 1}`} />
+          ))}
+        </div>
+        <button class="hero-slider-btn" id="slider-next" aria-label="Next slide">&#8250;</button>
       </div>
     </section>
 
+    <!-- ═══ ON ROTATION ═══ -->
+    <section class="signal-board section">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">
+            <Icon name="music" class="title-icon" />
+            On Rotation
+          </h2>
+          <p>The headline picks right now.</p>
+        </div>
+      </div>
+
+      <div class="signal-grid">
+        <article class="signal-card">
+          <div class="signal-top">
+            <p class="signal-label">Song of the Week</p>
+            <span class="signal-icon" aria-hidden="true"><Icon name="music" /></span>
+          </div>
+          <h3 class="signal-title">{songOfWeekTitle}</h3>
+          <p class="signal-subtitle">{songOfWeekSubtitle}</p>
+          <p class="signal-meta">{songOfWeekMeta}</p>
+          <a class="signal-link" href={songOfWeekHref}>Open pick</a>
+        </article>
+
+        <article class="signal-card">
+          <div class="signal-top">
+            <p class="signal-label">Album of the Month</p>
+            <span class="signal-icon" aria-hidden="true"><Icon name="review" /></span>
+          </div>
+          <h3 class="signal-title">
+            {albumOfMonth ? `${albumOfMonth.data.artist} — ${albumOfMonth.data.title}` : 'No album selected yet'}
+          </h3>
+          <p class="signal-subtitle">
+            {albumOfMonth ? `${albumMonthLabel} pick · ${albumOfMonth.data.rating}/10` : 'Waiting on the next review cycle'}
+          </p>
+          <p class="signal-meta">
+            {albumOfMonth ? `Reviewed ${formatDate(albumOfMonth.data.review_date)}` : 'Keep listening'}
+          </p>
+          <a class="signal-link" href={albumOfMonth ? `/reviews/${albumOfMonth.slug}/` : '/reviews/'}>Read review</a>
+        </article>
+
+        <article class="signal-card">
+          <div class="signal-top">
+            <p class="signal-label">Listening Now</p>
+            <span class="signal-icon" aria-hidden="true"><Icon name="headphones" /></span>
+          </div>
+          <h3 class="signal-title">{nowListening.title}</h3>
+          <p class="signal-subtitle">{nowListening.subtitle}</p>
+          <p class="signal-meta">{nowListening.meta}</p>
+          <a class="signal-link" href={nowListening.href}>{nowListening.cta}</a>
+        </article>
+      </div>
+
+      <div class="format-grid" aria-label="Music sections">
+        {formatLinks.map((link) => (
+          <a class="format-link" href={link.href}>
+            <span class="format-icon" aria-hidden="true"><Icon name={link.icon} /></span>
+            <div class="format-copy">
+              <p class="format-title">{link.title}</p>
+              <p class="format-note">{link.note}</p>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- ═══ PINNED ═══ -->
     {pinnedReviews.length > 0 && (
-      <section class="section pinned-section">
+      <section class="section">
         <div class="section-head">
           <div>
-            <h2>Pinned</h2>
-            <p>Currently highlighted reviews.</p>
+            <h2 class="section-title"><Icon name="review" class="title-icon" /> Pinned</h2>
+            <p>Anchor reviews that stay at the top.</p>
           </div>
         </div>
         <div class="grid">
@@ -100,118 +243,51 @@ const hasPinnedOrFeatured = pinnedReviews.length > 0 || featuredPosts.length > 0
             <PostCard
               title={`${entry.data.artist} — ${entry.data.title}`}
               href={`/reviews/${entry.slug}/`}
-              meta={`${formatDate(entry.data.review_date)} • ${entry.data.rating}/10`}
+              meta={`${formatDate(entry.data.review_date)} · ${entry.data.rating}/10`}
               excerpt={entry.data.excerpt}
               label="Pinned"
               cover={entry.data.cover}
+              rating={entry.data.rating}
+              square={true}
+              pillClass="pill-review"
             />
           ))}
         </div>
       </section>
     )}
 
-    {featuredPosts.length > 0 && (
-      <section class="section featured-section">
-        <div class="section-head">
-          <div>
-            <h2>Featured</h2>
-            <p>Recommended reads from across the site.</p>
-          </div>
-        </div>
-        <div class="grid">
-          {featuredPosts.map(({ type, entry }) => {
-            if (type === 'review') {
-              return (
-                <PostCard
-                  title={`${entry.data.artist} — ${entry.data.title}`}
-                  href={`/reviews/${entry.slug}/`}
-                  meta={`${formatDate(entry.data.review_date)} • ${entry.data.rating}/10`}
-                  excerpt={entry.data.excerpt}
-                  label="Featured review"
-                  cover={entry.data.cover}
-                />
-              );
-            }
-            if (type === 'gig') {
-              return (
-                <PostCard
-                  title={entry.data.title}
-                  href={`/gigs/${entry.slug}/`}
-                  meta={`${formatDate(entry.data.event_date)} • ${entry.data.city}`}
-                  excerpt={entry.data.excerpt}
-                  label="Featured gig"
-                  cover={entry.data.cover}
-                />
-              );
-            }
-            if (type === 'deep-dive') {
-              return (
-                <PostCard
-                  title={entry.data.title}
-                  href={`/deep-dives/${entry.slug}/`}
-                  meta={formatDate(entry.data.published_on)}
-                  excerpt={entry.data.excerpt}
-                  label="Featured dive"
-                  cover={entry.data.cover}
-                />
-              );
-            }
-            if (type === 'playlist') {
-              return (
-                <PostCard
-                  title={entry.data.title}
-                  href={`/playlists/${entry.slug}/`}
-                  meta={`${formatDate(entry.data.published_on)} • ${entry.data.platform}`}
-                  excerpt={entry.data.excerpt}
-                  label="Featured playlist"
-                  cover={entry.data.cover}
-                />
-              );
-            }
-            if (type === 'note') {
-              return (
-                <PostCard
-                  title={entry.data.title}
-                  href={`/notes/${entry.slug}/`}
-                  meta={formatDate(entry.data.listened_on)}
-                  excerpt={entry.data.excerpt}
-                  label="Featured note"
-                  cover={entry.data.cover}
-                />
-              );
-            }
-          })}
-        </div>
-      </section>
-    )}
-
+    <!-- ═══ LATEST REVIEWS ═══ -->
     <section class="section">
       <div class="section-head">
         <div>
-          <h2>Latest album reviews</h2>
-          <p>Slow, full-album listening notes. New releases and older records revisited.</p>
+          <h2 class="section-title"><Icon name="vinyl" class="title-icon" /> Latest Reviews</h2>
+          <p>Full-album listening notes for new releases and older records worth another spin.</p>
         </div>
-        <a class="button ghost" href="/reviews/">All reviews</a>
+        <a class="button ghost" href="/reviews/">All Reviews</a>
       </div>
       <div class="grid">
         {latestReviews.map((entry) => (
           <PostCard
             title={`${entry.data.artist} — ${entry.data.title}`}
             href={`/reviews/${entry.slug}/`}
-            meta={`${formatDate(entry.data.review_date)} • ${entry.data.rating}/10`}
+            meta={`${formatDate(entry.data.review_date)} · ${entry.data.rating}/10`}
             excerpt={entry.data.excerpt}
             label="Review"
             cover={entry.data.cover}
+            rating={entry.data.rating}
+            square={true}
+            pillClass="pill-review"
           />
         ))}
       </div>
     </section>
 
+    <!-- ═══ FROM THE FIELD ═══ -->
     <section class="section">
       <div class="section-head">
         <div>
-          <h2>From the field</h2>
-          <p>Gig diaries, deep dives, playlists, and quick notes that round out the listening log.</p>
+          <h2 class="section-title"><Icon name="speaker" class="title-icon" /> From the Field</h2>
+          <p>Gig diaries, deep dives, playlists, and quick notes.</p>
         </div>
       </div>
       <div class="grid">
@@ -219,10 +295,11 @@ const hasPinnedOrFeatured = pinnedReviews.length > 0 || featuredPosts.length > 0
           <PostCard
             title={latestGig.data.title}
             href={`/gigs/${latestGig.slug}/`}
-            meta={`${formatDate(latestGig.data.event_date)} • ${latestGig.data.city}`}
+            meta={`${formatDate(latestGig.data.event_date)} · ${latestGig.data.city}`}
             excerpt={latestGig.data.excerpt}
-            label="Gig diary"
+            label="Gig"
             cover={latestGig.data.cover}
+            pillClass="pill-gig"
           />
         )}
         {latestDeepDive && (
@@ -231,18 +308,20 @@ const hasPinnedOrFeatured = pinnedReviews.length > 0 || featuredPosts.length > 0
             href={`/deep-dives/${latestDeepDive.slug}/`}
             meta={formatDate(latestDeepDive.data.published_on)}
             excerpt={latestDeepDive.data.excerpt}
-            label="Deep dive"
+            label="Deep Dive"
             cover={latestDeepDive.data.cover}
+            pillClass="pill-dive"
           />
         )}
         {latestPlaylist && (
           <PostCard
             title={latestPlaylist.data.title}
             href={`/playlists/${latestPlaylist.slug}/`}
-            meta={`${formatDate(latestPlaylist.data.published_on)} • ${latestPlaylist.data.platform}`}
+            meta={`${formatDate(latestPlaylist.data.published_on)} · ${latestPlaylist.data.platform}`}
             excerpt={latestPlaylist.data.excerpt}
             label="Playlist"
             cover={latestPlaylist.data.cover}
+            pillClass="pill-playlist"
           />
         )}
         {latestNote && (
@@ -251,11 +330,41 @@ const hasPinnedOrFeatured = pinnedReviews.length > 0 || featuredPosts.length > 0
             href={`/notes/${latestNote.slug}/`}
             meta={formatDate(latestNote.data.listened_on)}
             excerpt={latestNote.data.excerpt}
-            label="Listening note"
+            label="Note"
             cover={latestNote.data.cover}
+            pillClass="pill-note"
           />
         )}
       </div>
     </section>
   </div>
 </Layout>
+
+<script>
+  const track = document.getElementById('slider-track') as HTMLElement;
+  const dots = document.querySelectorAll<HTMLButtonElement>('.hero-slider-dot');
+  const prevBtn = document.getElementById('slider-prev') as HTMLButtonElement;
+  const nextBtn = document.getElementById('slider-next') as HTMLButtonElement;
+  const totalSlides = dots.length;
+  let current = 0;
+  let autoTimer: ReturnType<typeof setInterval>;
+
+  function goTo(index: number) {
+    current = ((index % totalSlides) + totalSlides) % totalSlides;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  prevBtn.addEventListener('click', () => { goTo(current - 1); resetAuto(); });
+  nextBtn.addEventListener('click', () => { goTo(current + 1); resetAuto(); });
+  dots.forEach((dot) => {
+    dot.addEventListener('click', () => { goTo(Number(dot.dataset.index)); resetAuto(); });
+  });
+
+  function resetAuto() {
+    clearInterval(autoTimer);
+    autoTimer = setInterval(() => goTo(current + 1), 6000);
+  }
+
+  resetAuto();
+</script>

@@ -1,24 +1,35 @@
 ---
+import Icon from './Icon.astro';
+
 const navItems = [
-  { href: '/', label: 'Home' },
-  { href: '/reviews/', label: 'Reviews' },
-  { href: '/gigs/', label: 'Gigs' },
-  { href: '/deep-dives/', label: 'Deep Dives' },
-  { href: '/playlists/', label: 'Playlists' },
-  { href: '/notes/', label: 'Notes' },
-  { href: '/archive/', label: 'Archive' },
-  { href: '/search/', label: 'Search' },
+  { href: '/', label: 'Home', icon: 'music' },
+  { href: '/reviews/', label: 'Reviews', icon: 'review' },
+  { href: '/gigs/', label: 'Gigs', icon: 'gig' },
+  { href: '/deep-dives/', label: 'Deep Dives', icon: 'dive' },
+  { href: '/playlists/', label: 'Playlists', icon: 'playlist' },
+  { href: '/notes/', label: 'Notes', icon: 'note' },
+  { href: '/archive/', label: 'Archive', icon: 'archive' },
+  { href: '/search/', label: 'Search', icon: 'search' },
 ];
+
+const pathname = Astro.url.pathname;
+const isActive = (href: string) => {
+  if (href === '/') return pathname === '/';
+  return pathname.startsWith(href);
+};
 ---
 <header class="site-header">
   <div class="container header-inner">
     <a class="brand" href="/">
-      Bernard On The Aux
-      <span class="brand-tag">Listening log & reviews</span>
+      <Icon name="turntable" class="brand-mark" />
+      <span class="brand-main">Bernard On The Aux</span>
     </a>
     <nav class="nav">
       {navItems.map((item) => (
-        <a href={item.href}>{item.label}</a>
+        <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+          <Icon name={item.icon} class="nav-icon" />
+          <span>{item.label}</span>
+        </a>
       ))}
     </nav>
   </div>

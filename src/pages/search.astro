@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
 ---
 
 <Layout
@@ -9,7 +10,10 @@ import Layout from '../layouts/Layout.astro';
   <div class="container">
     <header class="page-header">
       <p class="eyebrow">Search</p>
-      <h1>Search</h1>
+      <h1 class="title-with-icon">
+        <Icon name="search" class="title-icon" />
+        Search
+      </h1>
       <p>Find posts by title, artist, or tag.</p>
     </header>
 
@@ -17,32 +21,30 @@ import Layout from '../layouts/Layout.astro';
       <input
         type="search"
         id="search-input"
-        placeholder="Search posts..."
+        class="search-input"
+        placeholder="Search reviews, gigs, playlists..."
         autocomplete="off"
         autofocus
       />
 
-      <div class="search-filters">
-        <label>
-          <input type="checkbox" name="collection" value="reviews" checked />
-          Reviews
-        </label>
-        <label>
-          <input type="checkbox" name="collection" value="gigs" checked />
-          Gigs
-        </label>
-        <label>
-          <input type="checkbox" name="collection" value="deep-dives" checked />
-          Deep Dives
-        </label>
-        <label>
-          <input type="checkbox" name="collection" value="playlists" checked />
-          Playlists
-        </label>
-        <label>
-          <input type="checkbox" name="collection" value="notes" checked />
-          Notes
-        </label>
+      <div class="search-filters" id="search-filters">
+        <span class="filter-label">Filter</span>
+        <button class="filter-pill active" data-collection="all">All</button>
+        <button class="filter-pill" data-collection="reviews">
+          <Icon name="review" size={12} /> Reviews
+        </button>
+        <button class="filter-pill" data-collection="gigs">
+          <Icon name="gig" size={12} /> Gigs
+        </button>
+        <button class="filter-pill" data-collection="deep-dives">
+          <Icon name="dive" size={12} /> Deep Dives
+        </button>
+        <button class="filter-pill" data-collection="playlists">
+          <Icon name="playlist" size={12} /> Playlists
+        </button>
+        <button class="filter-pill" data-collection="notes">
+          <Icon name="note" size={12} /> Notes
+        </button>
       </div>
 
       <div id="search-results" class="search-results">
@@ -69,16 +71,16 @@ import Layout from '../layouts/Layout.astro';
 
   let searchIndex: SearchItem[] = [];
   let fuse: Fuse<SearchItem>;
+  let activeCollection = 'all';
 
   const searchInput = document.getElementById('search-input') as HTMLInputElement;
   const resultsContainer = document.getElementById('search-results') as HTMLDivElement;
-  const collectionFilters = document.querySelectorAll<HTMLInputElement>('input[name="collection"]');
+  const filterBtns = document.querySelectorAll<HTMLButtonElement>('#search-filters .filter-pill');
 
   async function initSearch() {
     try {
       const response = await fetch('/search-index.json');
       searchIndex = await response.json();
-
       fuse = new Fuse(searchIndex, {
         keys: [
           { name: 'title', weight: 2 },
@@ -90,64 +92,54 @@ import Layout from '../layouts/Layout.astro';
         includeScore: true,
       });
     } catch (error) {
-      console.error('Failed to load search index:', error);
       resultsContainer.innerHTML = '<p class="search-error">Failed to load search index.</p>';
     }
   }
 
-  function getActiveCollections(): string[] {
-    return Array.from(collectionFilters)
-      .filter((cb) => cb.checked)
-      .map((cb) => cb.value);
-  }
+  filterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCollection = btn.dataset.collection!;
+      performSearch();
+    });
+  });
 
   function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   function performSearch() {
     const query = searchInput.value.trim();
-    const activeCollections = getActiveCollections();
-
     if (!query) {
       resultsContainer.innerHTML = '<p class="search-hint">Start typing to search...</p>';
       return;
     }
-
     if (!fuse) {
       resultsContainer.innerHTML = '<p class="search-hint">Loading search...</p>';
       return;
     }
 
-    const results = fuse
-      .search(query)
-      .filter((result) => activeCollections.includes(result.item.collection))
+    const results = fuse.search(query)
+      .filter((r) => activeCollection === 'all' || r.item.collection === activeCollection)
       .slice(0, 20);
 
     if (results.length === 0) {
-      resultsContainer.innerHTML = `<p class="search-no-results">No results found for "${query}"</p>`;
+      resultsContainer.innerHTML = `<p class="search-no-results">No results for "${query}"</p>`;
       return;
     }
 
-    const html = results
-      .map(
-        (result) => `
-          <a href="${result.item.href}" class="search-result">
-            <div class="search-result-header">
-              <span class="pill">${result.item.collectionLabel}</span>
-              <span class="search-result-date">${formatDate(result.item.date)}</span>
-            </div>
-            <h3 class="search-result-title">${result.item.title}</h3>
-            ${result.item.excerpt ? `<p class="search-result-excerpt">${result.item.excerpt}</p>` : ''}
-            ${result.item.tags.length > 0 ? `<div class="search-result-tags">${result.item.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
-          </a>
-        `
-      )
-      .join('');
+    const html = results.map((r) => `
+      <a href="${r.item.href}" class="search-result">
+        <div class="search-result-header">
+          <span class="pill">${r.item.collectionLabel}</span>
+          <span class="search-result-date">${formatDate(r.item.date)}</span>
+        </div>
+        <h3 class="search-result-title">${r.item.title}</h3>
+        ${r.item.excerpt ? `<p class="search-result-excerpt">${r.item.excerpt}</p>` : ''}
+        ${r.item.tags.length > 0 ? `<div class="search-result-tags">${r.item.tags.map((t) => `<span class="detail-tag">${t}</span>`).join('')}</div>` : ''}
+      </a>
+    `).join('');
 
     resultsContainer.innerHTML = `
       <p class="search-count">${results.length} result${results.length === 1 ? '' : 's'} for "${query}"</p>
@@ -155,94 +147,65 @@ import Layout from '../layouts/Layout.astro';
     `;
   }
 
-  // Debounce search
   let searchTimeout: ReturnType<typeof setTimeout>;
   searchInput.addEventListener('input', () => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(performSearch, 150);
   });
 
-  // Handle filter changes
-  collectionFilters.forEach((filter) => {
-    filter.addEventListener('change', performSearch);
-  });
-
-  // Initialize
   initSearch();
 </script>
 
 <style>
-  .search-container {
-    max-width: 640px;
-  }
+  .search-container { max-width: 700px; }
 
-  #search-input {
+  .search-input {
     width: 100%;
-    padding: 0.875rem 1rem;
+    padding: 0.9rem 1.1rem;
     font-size: 1rem;
-    border: 1px solid var(--line);
+    border: 2px solid var(--ink);
     border-radius: var(--radius);
     background: var(--bg);
     color: var(--ink);
     outline: none;
-    transition: border-color 0.15s ease;
+    font-family: var(--font-body);
   }
-
-  #search-input:focus {
-    border-color: var(--ink);
-  }
+  .search-input:focus { border-color: var(--accent); }
 
   .search-filters {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 1rem;
-    padding: 0.75rem 0;
-  }
-
-  .search-filters label {
-    display: flex;
     align-items: center;
-    gap: 0.375rem;
-    font-size: 0.875rem;
-    color: var(--muted);
-    cursor: pointer;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    padding: 0.5rem 0;
   }
 
-  .search-filters input[type="checkbox"] {
-    accent-color: var(--ink);
-  }
+  .search-results { margin-top: 2rem; }
 
-  .search-results {
-    margin-top: 2rem;
-  }
-
-  .search-hint,
-  .search-no-results,
-  .search-error {
+  .search-hint, .search-no-results, .search-error {
     color: var(--muted);
     font-style: italic;
   }
 
   .search-count {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     color: var(--muted);
     margin-bottom: 1.5rem;
+    font-family: var(--font-label);
+    letter-spacing: 0.05em;
   }
 
   .search-result {
     display: block;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    background: var(--card);
+    padding: 1.2rem;
+    margin-bottom: 0.8rem;
+    border: 1px solid var(--line);
     border-radius: var(--radius);
-    text-decoration: none;
-    transition: background 0.15s ease;
+    background: var(--card);
+    transition: border-color 0.15s ease;
   }
-
-  .search-result:hover {
-    background: var(--line);
-  }
+  .search-result:hover { border-color: var(--ink); color: inherit; }
 
   .search-result-header {
     display: flex;
@@ -250,38 +213,24 @@ import Layout from '../layouts/Layout.astro';
     gap: 0.75rem;
     margin-bottom: 0.5rem;
   }
-
   .search-result-date {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--muted);
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
-
-  .search-result-title {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 500;
-    color: var(--ink);
-  }
-
+  .search-result-title { margin: 0; font-size: 1.1rem; color: var(--ink); }
   .search-result-excerpt {
-    margin: 0.5rem 0 0;
-    font-size: 0.875rem;
+    margin: 0.4rem 0 0;
+    font-size: 0.88rem;
     color: var(--muted);
     line-height: 1.5;
   }
-
   .search-result-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.375rem;
-    margin-top: 0.75rem;
-  }
-
-  .search-result-tags .tag {
-    padding: 0.125rem 0.5rem;
-    font-size: 0.75rem;
-    background: var(--bg);
-    border-radius: var(--radius);
-    color: var(--muted);
+    gap: 0.35rem;
+    margin-top: 0.7rem;
   }
 </style>

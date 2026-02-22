@@ -2,6 +2,7 @@
 import type { GetStaticPaths, Page } from 'astro';
 import Layout from '../../layouts/Layout.astro';
 import Pagination from '../../components/Pagination.astro';
+import Icon from '../../components/Icon.astro';
 import { getCollection } from 'astro:content';
 import { formatDate } from '../../utils/format';
 
@@ -62,13 +63,25 @@ interface Props {
 }
 
 const { page } = Astro.props;
+
+const iconByKind = (kind: string) => {
+  if (kind === 'Review') return 'review';
+  if (kind === 'Gig diary') return 'gig';
+  if (kind === 'Deep dive') return 'dive';
+  if (kind === 'Playlist') return 'playlist';
+  if (kind === 'Listening note') return 'note';
+  return 'music';
+};
 ---
 
 <Layout title="Archive | Bernard On The Aux" description="A structured archive of music that has been properly listened to.">
   <div class="container">
     <header class="page-header">
       <p class="eyebrow">Archive</p>
-      <h1>Archive</h1>
+      <h1 class="title-with-icon">
+        <Icon name="archive" class="title-icon" />
+        Archive
+      </h1>
       <p>A structured archive of music that's been properly listened to.</p>
     </header>
 
@@ -76,7 +89,10 @@ const { page } = Astro.props;
       {page.data.map((item) => (
         <li class="archive-item">
           <div class="archive-meta">
-            <span class="pill">{item.kind}</span>
+            <span class="pill">
+              <Icon name={iconByKind(item.kind)} class="pill-icon" />
+              {item.kind}
+            </span>
             <span>{formatDate(item.date)}</span>
           </div>
           <a href={item.href}>{item.title}</a>

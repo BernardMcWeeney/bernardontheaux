@@ -1,22 +1,92 @@
 ---
-const { title, href, meta, excerpt, label, cover } = Astro.props;
+import Icon from './Icon.astro';
+
+interface Props {
+  title: string;
+  href: string;
+  meta?: string;
+  excerpt?: string;
+  label?: string;
+  cover?: string;
+  icon?: string;
+  rating?: number;
+  square?: boolean;
+  pillClass?: string;
+}
+
+const {
+  title,
+  href,
+  meta,
+  excerpt,
+  label,
+  cover,
+  icon,
+  rating,
+  square = false,
+  pillClass,
+} = Astro.props as Props;
+
+const iconByPillClass: Record<string, string> = {
+  'pill-review': 'review',
+  'pill-gig': 'gig',
+  'pill-dive': 'dive',
+  'pill-playlist': 'playlist',
+  'pill-note': 'note',
+};
+
+const iconByLabel: { pattern: RegExp; icon: string }[] = [
+  { pattern: /review/i, icon: 'review' },
+  { pattern: /gig/i, icon: 'gig' },
+  { pattern: /dive/i, icon: 'dive' },
+  { pattern: /playlist/i, icon: 'playlist' },
+  { pattern: /note/i, icon: 'note' },
+];
+
+const fallbackIcon = label
+  ? iconByLabel.find((entry) => entry.pattern.test(label))?.icon
+  : undefined;
+
+const resolvedIcon = icon ?? (pillClass ? iconByPillClass[pillClass] : undefined) ?? fallbackIcon;
+
+const vibeClass = rating !== undefined
+  ? rating >= 8 ? 'card-vibe-warm' : rating < 5 ? 'card-vibe-cool' : 'card-vibe-neutral'
+  : pillClass === 'pill-gig' ? 'card-vibe-gig' : '';
 ---
-<article class="card">
+<article class:list={['card', square && 'card-square', vibeClass]}>
   <a class="card-link" href={href}>
-    <div class="card-media">
+    <div class:list={['card-media', square && 'square']}>
       {cover ? (
         <img src={cover} alt="" loading="lazy" />
       ) : (
         <div class="card-placeholder">
+          {resolvedIcon && <Icon name={resolvedIcon} size={48} class="placeholder-icon" />}
           <span>On the aux</span>
         </div>
       )}
     </div>
     <div class="card-body">
-      {label && <span class="pill">{label}</span>}
-      <h3>{title}</h3>
+      {(label || rating !== undefined) && (
+        <div class="card-head">
+          {label && (
+            <span class:list={['pill', pillClass]}>
+              {resolvedIcon && <Icon name={resolvedIcon} class="pill-icon" />}
+              {label}
+            </span>
+          )}
+          {rating !== undefined && <span class="card-rating">{rating}<span style="font-size:0.55em;color:var(--muted);font-family:var(--font-label);letter-spacing:0.08em">/10</span></span>}
+        </div>
+      )}
+      <h3 class="card-title">{title}</h3>
       {meta && <p class="meta">{meta}</p>}
       {excerpt && <p class="excerpt">{excerpt}</p>}
     </div>
   </a>
 </article>
+
+<style>
+  .card-vibe-warm { border-top: 4px solid var(--accent); }
+  .card-vibe-neutral { border-top: 4px solid var(--ink); }
+  .card-vibe-cool { border-top: 4px solid #2a3a4f; }
+  .card-vibe-gig { border-top: 4px solid var(--accent); }
+</style>

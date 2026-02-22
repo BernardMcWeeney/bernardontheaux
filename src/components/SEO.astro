@@ -23,7 +23,7 @@ const {
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
 const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString();
-const ogImage = image ? new URL(image, siteUrl).toString() : `${siteUrl}/og-default.png`;
+const ogImage = image ? new URL(image, siteUrl).toString() : `${siteUrl}/og-default.svg`;
 
 const jsonLd = type === 'article' && publishedTime
   ? {
@@ -55,6 +55,14 @@ const jsonLd = type === 'article' && publishedTime
       name: 'Bernard On The Aux',
       description: 'A personal, passion-driven music review and listening log.',
       url: siteUrl,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${siteUrl}/search/?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
     };
 ---
 

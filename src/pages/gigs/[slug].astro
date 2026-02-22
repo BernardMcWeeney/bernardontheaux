@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import RelatedPosts from '../../components/RelatedPosts.astro';
+import Icon from '../../components/Icon.astro';
 import { getCollection } from 'astro:content';
 import { formatDate } from '../../utils/format';
 import { slugifyTag } from '../../utils/tags';
@@ -13,6 +14,17 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await entry.render();
 const tags = entry.data.tags ?? [];
+
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Gigs', item: `${siteUrl}/gigs/` },
+    { '@type': 'ListItem', position: 3, name: entry.data.title, item: `${siteUrl}/gigs/${entry.slug}/` },
+  ],
+};
 ---
 
 <Layout
@@ -23,81 +35,99 @@ const tags = entry.data.tags ?? [];
   publishedTime={entry.data.event_date}
   tags={tags}
 >
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
   <div class="container">
-    <article class="post">
-      <header class="post-header">
-        <p class="eyebrow">Gig diary</p>
-        <h1 class="post-title">{entry.data.title}</h1>
-        <div class="post-meta">
-          <span>{formatDate(entry.data.event_date)}</span>
-          <span>{entry.data.venue}</span>
-          <span>{entry.data.city}</span>
-        </div>
-      </header>
+    <div class="post-layout">
+      <a class="post-back" href="/gigs/">← Back to Gigs</a>
 
-      <dl class="meta-grid">
-        {entry.data.tour && (
-          <div>
-            <dt>Tour</dt>
-            <dd>{entry.data.tour}</dd>
+      <div class="post-banner">
+        {entry.data.cover ? (
+          <img src={entry.data.cover} alt={entry.data.title} />
+        ) : (
+          <div class="post-banner-placeholder">
+            <Icon name="gig" size={56} />
           </div>
         )}
-        {entry.data.support && (
-          <div>
-            <dt>Support</dt>
-            <dd>{entry.data.support}</dd>
-          </div>
-        )}
-        {entry.data.highlights && (
-          <div>
-            <dt>Highlights</dt>
-            <dd>{entry.data.highlights}</dd>
-          </div>
-        )}
-        {tags.length > 0 && (
-          <div>
-            <dt>Tags</dt>
-            <dd class="tag-list">
-              {tags.map((tag) => (
-                <a href={`/tags/${slugifyTag(tag)}/`} class="tag-link">{tag}</a>
-              ))}
-            </dd>
-          </div>
-        )}
-      </dl>
-
-      <div class="post-body">
-        <Content />
       </div>
 
-      <RelatedPosts
-        currentSlug={entry.slug}
-        currentCollection="gigs"
-        currentTags={tags}
-        currentArtist={entry.data.artist}
-      />
-    </article>
+      <div class="post-content">
+        <div class="post-main">
+          <header class="post-header-detail">
+            <div class="post-collection-badge badge-gig">
+              <Icon name="gig" /> Gig Diary
+            </div>
+            <h1 class="post-title-detail">{entry.data.title}</h1>
+            <div class="post-meta-strip">
+              <span>{formatDate(entry.data.event_date)}</span>
+              <span>{entry.data.venue}</span>
+              <span>{entry.data.city}</span>
+            </div>
+          </header>
+
+          {entry.data.highlights && (
+            <div class="highlights-callout">
+              <p class="highlights-callout-title">Highlights</p>
+              <p>{entry.data.highlights}</p>
+            </div>
+          )}
+
+          <div class="post-body">
+            <Content />
+          </div>
+
+          <RelatedPosts
+            currentSlug={entry.slug}
+            currentCollection="gigs"
+            currentTags={tags}
+            currentArtist={entry.data.artist}
+          />
+        </div>
+
+        <aside class="post-sidebar">
+          <div class="sidebar-card">
+            <p class="sidebar-card-title">Event Info</p>
+            <div class="sidebar-item">
+              <span class="sidebar-item-label">Artist</span>
+              <span class="sidebar-item-value">{entry.data.artist}</span>
+            </div>
+            <div class="sidebar-item">
+              <span class="sidebar-item-label">Venue</span>
+              <span class="sidebar-item-value">{entry.data.venue}</span>
+            </div>
+            <div class="sidebar-item">
+              <span class="sidebar-item-label">City</span>
+              <span class="sidebar-item-value">{entry.data.city}</span>
+            </div>
+            <div class="sidebar-item">
+              <span class="sidebar-item-label">Date</span>
+              <span class="sidebar-item-value">{formatDate(entry.data.event_date)}</span>
+            </div>
+            {entry.data.tour && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Tour</span>
+                <span class="sidebar-item-value">{entry.data.tour}</span>
+              </div>
+            )}
+            {entry.data.support && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Support</span>
+                <span class="sidebar-item-value">{entry.data.support}</span>
+              </div>
+            )}
+          </div>
+
+          {tags.length > 0 && (
+            <div class="sidebar-card">
+              <p class="sidebar-card-title">Tags</p>
+              <div class="detail-tags">
+                {tags.map((tag) => (
+                  <a href={`/tags/${slugifyTag(tag)}/`} class="detail-tag">{tag}</a>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
   </div>
 </Layout>
-
-<style>
-  .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .tag-link {
-    padding: 0.25rem 0.5rem;
-    background: var(--card);
-    border-radius: var(--radius);
-    font-size: 0.875rem;
-    text-decoration: none;
-    color: var(--ink);
-    transition: background 0.15s ease;
-  }
-
-  .tag-link:hover {
-    background: var(--line);
-  }
-</style>

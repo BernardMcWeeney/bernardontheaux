@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import RelatedPosts from '../../components/RelatedPosts.astro';
+import Icon from '../../components/Icon.astro';
 import { getCollection } from 'astro:content';
 import { formatDate, formatRating } from '../../utils/format';
 import { slugifyTag } from '../../utils/tags';
@@ -16,6 +17,36 @@ const { Content } = await entry.render();
 const rating = formatRating(entry.data.rating);
 const tags = entry.data.tags ?? [];
 const readingTime = formatReadingTime(calculateReadingTime(entry.body));
+
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
+const pageUrl = `${siteUrl}/reviews/${entry.slug}/`;
+
+const musicAlbumLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MusicAlbum',
+  name: entry.data.title,
+  byArtist: { '@type': 'MusicGroup', name: entry.data.artist },
+  ...(entry.data.release_year && { datePublished: String(entry.data.release_year) }),
+  ...(entry.data.cover && { image: new URL(entry.data.cover, siteUrl).toString() }),
+  ...(tags.length > 0 && { genre: tags }),
+  review: {
+    '@type': 'Review',
+    author: { '@type': 'Person', name: 'Bernard' },
+    datePublished: entry.data.review_date.toISOString(),
+    reviewBody: entry.data.excerpt ?? '',
+    reviewRating: { '@type': 'Rating', ratingValue: entry.data.rating, bestRating: 10, worstRating: 0 },
+  },
+};
+
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    { '@type': 'ListItem', position: 2, name: 'Reviews', item: `${siteUrl}/reviews/` },
+    { '@type': 'ListItem', position: 3, name: `${entry.data.artist} — ${entry.data.title}`, item: pageUrl },
+  ],
+};
 ---
 
 <Layout
@@ -26,78 +57,106 @@ const readingTime = formatReadingTime(calculateReadingTime(entry.body));
   publishedTime={entry.data.review_date}
   tags={tags}
 >
+  <script type="application/ld+json" set:html={JSON.stringify(musicAlbumLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
   <div class="container">
-    <article class="post">
-      <header class="post-header">
-        <p class="eyebrow">Album review</p>
-        <h1 class="post-title">{entry.data.artist} — {entry.data.title}</h1>
-        <div class="post-meta">
-          <span>{formatDate(entry.data.review_date)}</span>
-          <span>{readingTime}</span>
-          {entry.data.format && <span>{entry.data.format}</span>}
-          {entry.data.label && <span>{entry.data.label}</span>}
-          {entry.data.release_year && <span>{entry.data.release_year}</span>}
+    <div class="post-layout">
+      <a class="post-back" href="/reviews/">← Back to Reviews</a>
+
+      <!-- Album hero: square art + title/rating side by side -->
+      <div class="album-hero">
+        <div class="album-hero-art">
+          {entry.data.cover ? (
+            <img src={entry.data.cover} alt={`${entry.data.artist} — ${entry.data.title}`} />
+          ) : (
+            <div class="album-hero-art-placeholder">
+              <Icon name="review" size={56} />
+            </div>
+          )}
         </div>
-        <div class="rating">{rating}/10</div>
-      </header>
-
-      <dl class="meta-grid">
-        {entry.data.listened_on && (
-          <div>
-            <dt>Listened on</dt>
-            <dd>{formatDate(entry.data.listened_on)}</dd>
+        <div class="album-hero-info">
+          <div class="album-hero-badge">
+            <Icon name="review" /> Album Review
           </div>
-        )}
-        {entry.data.standout_tracks && (
-          <div>
-            <dt>Standout tracks</dt>
-            <dd>{entry.data.standout_tracks}</dd>
+          <h1 class="album-hero-title">{entry.data.artist} — {entry.data.title}</h1>
+          <div class="album-hero-meta">
+            <span>{formatDate(entry.data.review_date)}</span>
+            <span>{readingTime}</span>
+            {entry.data.format && <span>{entry.data.format}</span>}
           </div>
-        )}
-        {tags.length > 0 && (
-          <div>
-            <dt>Tags</dt>
-            <dd class="tag-list">
-              {tags.map((tag) => (
-                <a href={`/tags/${slugifyTag(tag)}/`} class="tag-link">{tag}</a>
-              ))}
-            </dd>
+          <div class="album-hero-rating">
+            <span class="album-hero-rating-number">{rating}</span>
+            <span class="album-hero-rating-suffix">/10</span>
           </div>
-        )}
-      </dl>
-
-      <div class="post-body">
-        <Content />
+        </div>
       </div>
 
-      <RelatedPosts
-        currentSlug={entry.slug}
-        currentCollection="reviews"
-        currentTags={tags}
-        currentArtist={entry.data.artist}
-      />
-    </article>
+      <div class="post-content">
+        <div class="post-main">
+          <div class="post-body">
+            <Content />
+          </div>
+
+          <RelatedPosts
+            currentSlug={entry.slug}
+            currentCollection="reviews"
+            currentTags={tags}
+            currentArtist={entry.data.artist}
+          />
+        </div>
+
+        <aside class="post-sidebar">
+          <div class="sidebar-card">
+            <p class="sidebar-card-title">Album Info</p>
+            <div class="sidebar-item">
+              <span class="sidebar-item-label">Artist</span>
+              <span class="sidebar-item-value">{entry.data.artist}</span>
+            </div>
+            {entry.data.release_year && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Year</span>
+                <span class="sidebar-item-value">{entry.data.release_year}</span>
+              </div>
+            )}
+            {entry.data.format && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Format</span>
+                <span class="sidebar-item-value">{entry.data.format}</span>
+              </div>
+            )}
+            {entry.data.label && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Label</span>
+                <span class="sidebar-item-value">{entry.data.label}</span>
+              </div>
+            )}
+            {entry.data.listened_on && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Listened</span>
+                <span class="sidebar-item-value">{formatDate(entry.data.listened_on)}</span>
+              </div>
+            )}
+          </div>
+
+          {entry.data.standout_tracks && (
+            <div class="sidebar-card">
+              <p class="sidebar-card-title">Standout Tracks</p>
+              <p style="margin:0;font-size:0.9rem;color:var(--ink-secondary);line-height:1.6">{entry.data.standout_tracks}</p>
+            </div>
+          )}
+
+          {tags.length > 0 && (
+            <div class="sidebar-card">
+              <p class="sidebar-card-title">Tags</p>
+              <div class="detail-tags">
+                {tags.map((tag) => (
+                  <a href={`/tags/${slugifyTag(tag)}/`} class="detail-tag">{tag}</a>
+                ))}
+              </div>
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
   </div>
 </Layout>
-
-<style>
-  .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .tag-link {
-    padding: 0.25rem 0.5rem;
-    background: var(--card);
-    border-radius: var(--radius);
-    font-size: 0.875rem;
-    text-decoration: none;
-    color: var(--ink);
-    transition: background 0.15s ease;
-  }
-
-  .tag-link:hover {
-    background: var(--line);
-  }
-</style>
