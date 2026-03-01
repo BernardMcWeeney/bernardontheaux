@@ -1,0 +1,311 @@
+media:
+  input: public/media
+  output: /media
+
+content:
+  - name: reviews
+    label: Reviews
+    type: collection
+    path: src/content/reviews
+    format: yaml-frontmatter
+    filename: "{slug}.md"
+    view:
+      fields: [title, artist, rating, review_date, published]
+      primary: title
+      sort: review_date
+      order: desc
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: artist
+        label: Artist
+        type: string
+        required: true
+      - name: review_date
+        label: Review Date
+        type: date
+        required: true
+      - name: listened_on
+        label: Listened On
+        type: date
+      - name: rating
+        label: Rating (0–10)
+        type: number
+        required: true
+      - name: format
+        label: Format
+        type: select
+        options:
+          values:
+            - value: Vinyl
+              label: Vinyl
+            - value: CD
+              label: CD
+            - value: Digital
+              label: Digital
+            - value: Stream
+              label: Stream
+            - value: Cassette
+              label: Cassette
+            - value: Other
+              label: Other
+      - name: label
+        label: Record Label
+        type: string
+      - name: release_year
+        label: Release Year
+        type: number
+      - name: standout_tracks
+        label: Standout Tracks
+        type: string
+        description: Comma-separated track names
+      - name: tags
+        label: Tags
+        type: string
+        list: true
+      - name: cover
+        label: Cover Image
+        type: image
+      - name: excerpt
+        label: Excerpt
+        type: text
+      - name: published
+        label: Published
+        type: boolean
+        default: true
+      - name: featured
+        label: Featured
+        type: boolean
+        default: false
+      - name: pinned
+        label: Pinned
+        type: boolean
+        default: false
+        description: Anchors review at top of home page
+
+  - name: gigs
+    label: Gigs
+    type: collection
+    path: src/content/gigs
+    format: yaml-frontmatter
+    filename: "{slug}.md"
+    view:
+      fields: [title, artist, venue, event_date, published]
+      primary: title
+      sort: event_date
+      order: desc
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: artist
+        label: Artist
+        type: string
+        required: true
+      - name: venue
+        label: Venue
+        type: string
+        required: true
+      - name: city
+        label: City
+        type: string
+        required: true
+      - name: event_date
+        label: Event Date
+        type: date
+        required: true
+      - name: tour
+        label: Tour Name
+        type: string
+      - name: support
+        label: Support Act
+        type: string
+      - name: highlights
+        label: Highlights
+        type: text
+        description: Key moments from the show
+      - name: tags
+        label: Tags
+        type: string
+        list: true
+      - name: cover
+        label: Cover Image
+        type: image
+      - name: excerpt
+        label: Excerpt
+        type: text
+      - name: published
+        label: Published
+        type: boolean
+        default: true
+      - name: featured
+        label: Featured
+        type: boolean
+        default: false
+
+  - name: deep-dives
+    label: Deep Dives
+    type: collection
+    path: src/content/deep-dives
+    format: yaml-frontmatter
+    filename: "{slug}.md"
+    view:
+      fields: [title, topic, published_on, published]
+      primary: title
+      sort: published_on
+      order: desc
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: published_on
+        label: Published On
+        type: date
+        required: true
+      - name: topic
+        label: Topic
+        type: string
+      - name: era
+        label: Era
+        type: string
+        description: "Historical period, e.g. 1974–1981"
+      - name: tags
+        label: Tags
+        type: string
+        list: true
+      - name: cover
+        label: Cover Image
+        type: image
+      - name: excerpt
+        label: Excerpt
+        type: text
+      - name: published
+        label: Published
+        type: boolean
+        default: true
+      - name: featured
+        label: Featured
+        type: boolean
+        default: false
+
+  - name: playlists
+    label: Playlists
+    type: collection
+    path: src/content/playlists
+    format: yaml-frontmatter
+    filename: "{slug}.md"
+    view:
+      fields: [title, platform, published_on, published]
+      primary: title
+      sort: published_on
+      order: desc
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: published_on
+        label: Published On
+        type: date
+        required: true
+      - name: platform
+        label: Platform
+        type: select
+        required: true
+        options:
+          values:
+            - value: Spotify
+              label: Spotify
+            - value: Apple Music
+              label: Apple Music
+            - value: YouTube
+              label: YouTube
+            - value: Tidal
+              label: Tidal
+            - value: Bandcamp
+              label: Bandcamp
+            - value: Other
+              label: Other
+      - name: playlist_url
+        label: Playlist URL
+        type: string
+        required: true
+      - name: embed_url
+        label: Embed URL
+        type: string
+        description: Embed code for the playlist player
+      - name: mood
+        label: Mood
+        type: string
+        description: "Mood/vibe descriptor, e.g. Moody, low-lit, steady pace"
+      - name: duration
+        label: Duration (minutes)
+        type: number
+      - name: tags
+        label: Tags
+        type: string
+        list: true
+      - name: cover
+        label: Cover Image
+        type: image
+      - name: excerpt
+        label: Excerpt
+        type: text
+      - name: published
+        label: Published
+        type: boolean
+        default: true
+      - name: featured
+        label: Featured
+        type: boolean
+        default: false
+
+  - name: notes
+    label: Notes
+    type: collection
+    path: src/content/notes
+    format: yaml-frontmatter
+    filename: "{slug}.md"
+    view:
+      fields: [title, artist, listened_on, published]
+      primary: title
+      sort: listened_on
+      order: desc
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: listened_on
+        label: Listened On
+        type: date
+        required: true
+      - name: artist
+        label: Artist
+        type: string
+      - name: source
+        label: Source
+        type: string
+        description: "Where/context, e.g. Morning commute"
+      - name: tags
+        label: Tags
+        type: string
+        list: true
+      - name: cover
+        label: Cover Image
+        type: image
+      - name: excerpt
+        label: Excerpt
+        type: text
+      - name: published
+        label: Published
+        type: boolean
+        default: true
+      - name: featured
+        label: Featured
+        type: boolean
+        default: false
