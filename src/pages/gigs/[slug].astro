@@ -16,13 +16,41 @@ const { Content } = await entry.render();
 const tags = entry.data.tags ?? [];
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
+const pageUrl = `${siteUrl}/gigs/${entry.slug}/`;
+
+const musicEventLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MusicEvent',
+  name: entry.data.title,
+  startDate: entry.data.event_date.toISOString(),
+  location: {
+    '@type': 'MusicVenue',
+    name: entry.data.venue,
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: entry.data.city,
+    },
+  },
+  performer: {
+    '@type': 'MusicGroup',
+    name: entry.data.artist,
+  },
+  ...(entry.data.tour && { description: `${entry.data.tour}` }),
+  ...(entry.data.cover && { image: new URL(entry.data.cover, siteUrl).toString() }),
+  ...(entry.data.excerpt && { review: {
+    '@type': 'Review',
+    author: { '@type': 'Person', name: 'Bernard' },
+    reviewBody: entry.data.excerpt,
+  }}),
+};
+
 const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
     { '@type': 'ListItem', position: 2, name: 'Gigs', item: `${siteUrl}/gigs/` },
-    { '@type': 'ListItem', position: 3, name: entry.data.title, item: `${siteUrl}/gigs/${entry.slug}/` },
+    { '@type': 'ListItem', position: 3, name: entry.data.title, item: pageUrl },
   ],
 };
 ---
@@ -34,7 +62,10 @@ const breadcrumbLd = {
   type="article"
   publishedTime={entry.data.event_date}
   tags={tags}
+  artist={entry.data.artist}
+  section="Gig Diaries"
 >
+  <script type="application/ld+json" set:html={JSON.stringify(musicEventLd)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
   <div class="container">
     <div class="post-layout">

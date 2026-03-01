@@ -56,6 +56,8 @@ const breadcrumbLd = {
   type="article"
   publishedTime={entry.data.review_date}
   tags={tags}
+  artist={entry.data.artist}
+  section="Album Reviews"
 >
   <script type="application/ld+json" set:html={JSON.stringify(musicAlbumLd)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />

@@ -16,13 +16,30 @@ const { Content } = await entry.render();
 const tags = entry.data.tags ?? [];
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
+const pageUrl = `${siteUrl}/playlists/${entry.slug}/`;
+
+const musicPlaylistLd = {
+  '@context': 'https://schema.org',
+  '@type': 'MusicPlaylist',
+  name: entry.data.title,
+  url: pageUrl,
+  datePublished: entry.data.published_on.toISOString(),
+  ...(entry.data.excerpt && { description: entry.data.excerpt }),
+  ...(entry.data.cover && { image: new URL(entry.data.cover, siteUrl).toString() }),
+  ...(entry.data.mood && { genre: entry.data.mood }),
+  creator: {
+    '@type': 'Person',
+    name: 'Bernard',
+  },
+};
+
 const breadcrumbLd = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
     { '@type': 'ListItem', position: 2, name: 'Playlists', item: `${siteUrl}/playlists/` },
-    { '@type': 'ListItem', position: 3, name: entry.data.title, item: `${siteUrl}/playlists/${entry.slug}/` },
+    { '@type': 'ListItem', position: 3, name: entry.data.title, item: pageUrl },
   ],
 };
 ---
@@ -34,7 +51,10 @@ const breadcrumbLd = {
   type="article"
   publishedTime={entry.data.published_on}
   tags={tags}
+  section="Playlists"
+  spotifyUrl={entry.data.platform === 'Spotify' ? entry.data.playlist_url : undefined}
 >
+  <script type="application/ld+json" set:html={JSON.stringify(musicPlaylistLd)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
   <div class="container">
     <div class="post-layout">

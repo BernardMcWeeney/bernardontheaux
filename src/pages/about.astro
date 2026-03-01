@@ -1,11 +1,41 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
+
+const personLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Bernard',
+  url: `${siteUrl}/about/`,
+  description: 'A listener, not a critic. Music reviewer and writer behind Bernard On The Aux.',
+  mainEntityOfPage: `${siteUrl}/about/`,
+  sameAs: [],
+};
+
+const blogLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: 'Bernard On The Aux',
+  url: siteUrl,
+  description: 'A personal, passion-driven music review and listening log. Album reviews, gig diaries, deep dives, playlists, and listening notes — built on slow listening.',
+  author: { '@type': 'Person', name: 'Bernard' },
+  blogPost: { '@type': 'ItemList', name: 'Content types', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Album Reviews', url: `${siteUrl}/reviews/` },
+    { '@type': 'ListItem', position: 2, name: 'Gig Diaries', url: `${siteUrl}/gigs/` },
+    { '@type': 'ListItem', position: 3, name: 'Deep Dives', url: `${siteUrl}/deep-dives/` },
+    { '@type': 'ListItem', position: 4, name: 'Playlists', url: `${siteUrl}/playlists/` },
+    { '@type': 'ListItem', position: 5, name: 'Listening Notes', url: `${siteUrl}/notes/` },
+  ]},
+};
 ---
 
 <Layout
   title="About | Bernard On The Aux"
   description="About Bernard On The Aux — a personal, passion-driven music review and listening log."
 >
+  <script type="application/ld+json" set:html={JSON.stringify(personLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(blogLd)} />
   <div class="container">
     <article class="post">
       <header class="post-header">

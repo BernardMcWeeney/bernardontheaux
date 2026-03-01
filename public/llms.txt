@@ -1,0 +1,48 @@
+# Bernard On The Aux
+
+> A personal, passion-driven music review and listening log. Album reviews, gig diaries, deep dives, playlists, and listening notes — built on slow listening.
+
+## About
+
+Bernard On The Aux is a music blog by Bernard that prioritizes listening, context, and memory over speed, hype, or blanket coverage. Reviews lean toward records that reward full attention — albums that unfold over time. The writing focuses on what a record sounds like, how it sits in a listening session, and why it might be worth your time.
+
+## Content Types
+
+- **Album Reviews**: Full-album listening sessions with ratings (0–10), format info (Vinyl, CD, Digital, Stream, Cassette), standout tracks, and critical notes. Found at /reviews/
+- **Gig Diaries**: Concert and live show notes for shows actually attended — the room, the set, the memory. Found at /gigs/
+- **Deep Dives**: Longer reads on artists, genres, and eras that deserve a slower pace. Found at /deep-dives/
+- **Playlists**: Curated sequences tied to posts, themes, or moods across Spotify, Apple Music, YouTube, Tidal, and Bandcamp. Found at /playlists/
+- **Listening Notes**: Quick observations when a moment deserves saving. Found at /notes/
+
+## Key Pages
+
+- Home: https://bernardontheaux.com/
+- All Reviews: https://bernardontheaux.com/reviews/
+- All Gigs: https://bernardontheaux.com/gigs/
+- Deep Dives: https://bernardontheaux.com/deep-dives/
+- Playlists: https://bernardontheaux.com/playlists/
+- Listening Notes: https://bernardontheaux.com/notes/
+- Archive: https://bernardontheaux.com/archive/
+- Tags: https://bernardontheaux.com/tags/
+- Search: https://bernardontheaux.com/search/
+- About: https://bernardontheaux.com/about/
+- Contact: https://bernardontheaux.com/contact/
+- RSS Feed: https://bernardontheaux.com/rss.xml
+- Full Content Index: https://bernardontheaux.com/llms-full.txt
+
+## Structured Data
+
+This site provides schema.org structured data (JSON-LD) including:
+- MusicAlbum with Review and Rating for album reviews
+- MusicEvent for gig diaries
+- MusicPlaylist for curated playlists
+- BlogPosting for all article content
+- BreadcrumbList for navigation
+- WebSite with SearchAction
+
+## Feeds & Machine-Readable Endpoints
+
+- RSS: https://bernardontheaux.com/rss.xml
+- Sitemap: https://bernardontheaux.com/sitemap-index.xml
+- Search Index (JSON): https://bernardontheaux.com/search-index.json
+- Full Content Index: https://bernardontheaux.com/llms-full.txt

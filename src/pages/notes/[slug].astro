@@ -34,6 +34,8 @@ const breadcrumbLd = {
   type="article"
   publishedTime={entry.data.listened_on}
   tags={tags}
+  artist={entry.data.artist}
+  section="Listening Notes"
 >
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
   <div class="container">

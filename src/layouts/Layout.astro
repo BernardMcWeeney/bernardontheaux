@@ -13,6 +13,9 @@ interface Props {
   modifiedTime?: Date;
   author?: string;
   tags?: string[];
+  artist?: string;
+  section?: string;
+  spotifyUrl?: string;
 }
 
 const {
@@ -24,6 +27,9 @@ const {
   modifiedTime,
   author,
   tags,
+  artist,
+  section,
+  spotifyUrl,
 } = Astro.props;
 ---
 <!doctype html>
@@ -49,6 +55,9 @@ const {
       modifiedTime={modifiedTime}
       author={author}
       tags={tags}
+      artist={artist}
+      section={section}
+      spotifyUrl={spotifyUrl}
     />
   </head>
   <body>
