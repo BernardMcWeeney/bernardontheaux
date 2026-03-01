@@ -146,7 +146,7 @@ p { margin: 0 0 1rem; }
   min-height: 1.7rem;
   padding: 0.2rem 0.45rem;
   border-radius: var(--radius);
-  color: rgba(255,255,255,0.65);
+  color: #fff;
   border: 1px solid transparent;
 }
 .nav a:hover {
@@ -154,7 +154,7 @@ p { margin: 0 0 1rem; }
   background: rgba(255,255,255,0.08);
 }
 
-.nav-icon { width: 0.9rem; height: 0.9rem; opacity: 0.65; }
+.nav-icon { width: 0.9rem; height: 0.9rem; opacity: 1; }
 .nav a:hover .nav-icon { opacity: 1; }
 
 .nav a[aria-current='page'] {
@@ -163,6 +163,25 @@ p { margin: 0 0 1rem; }
   border-color: var(--accent);
 }
 .nav a[aria-current='page'] .nav-icon { opacity: 1; }
+
+/* hamburger toggle – hidden on desktop */
+.menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--radius);
+  color: #fff;
+  padding: 0.35rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.menu-toggle:hover { background: rgba(255,255,255,0.08); }
+.menu-toggle .menu-icon { width: 1.4rem; height: 1.4rem; }
+.menu-icon--close { display: none; }
+[aria-expanded='true'] .menu-icon--open { display: none; }
+[aria-expanded='true'] .menu-icon--close { display: block; }
 
 /* ═══════════════════════════════════════════
    EYEBROW
@@ -1521,11 +1540,34 @@ p { margin: 0 0 1rem; }
   .page { padding-top: 2rem; }
 
   .header-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.6rem;
+    flex-wrap: wrap;
   }
-  .nav { gap: 0.1rem 0.25rem; }
+
+  .menu-toggle { display: flex; }
+
+  .nav {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0 0.25rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 0.5rem;
+  }
+  .nav.open {
+    display: flex;
+    animation: menuSlide 0.2s ease-out;
+  }
+  .nav a {
+    width: 100%;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  @keyframes menuSlide {
+    from { opacity: 0; transform: translateY(-0.5rem); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
   .section { margin-top: 3rem; }
   .grid { grid-template-columns: 1fr; }

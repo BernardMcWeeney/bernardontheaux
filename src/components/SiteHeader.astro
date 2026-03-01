@@ -24,7 +24,11 @@ const isActive = (href: string) => {
       <Icon name="turntable" class="brand-mark" />
       <span class="brand-main">Bernard On The Aux</span>
     </a>
-    <nav class="nav">
+    <button class="menu-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Menu">
+      <Icon name="menu" class="menu-icon menu-icon--open" />
+      <Icon name="x" class="menu-icon menu-icon--close" />
+    </button>
+    <nav id="main-nav" class="nav">
       {navItems.map((item) => (
         <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
           <Icon name={item.icon} class="nav-icon" />
@@ -34,3 +38,31 @@ const isActive = (href: string) => {
     </nav>
   </div>
 </header>
+
+<script>
+  const toggle = document.querySelector('.menu-toggle');
+  const nav = document.getElementById('main-nav');
+
+  if (toggle && nav) {
+    toggle.addEventListener('click', () => {
+      const open = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!open));
+      nav.classList.toggle('open', !open);
+    });
+
+    nav.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        toggle.setAttribute('aria-expanded', 'false');
+        nav.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && nav.classList.contains('open')) {
+        toggle.setAttribute('aria-expanded', 'false');
+        nav.classList.remove('open');
+        toggle.focus();
+      }
+    });
+  }
+</script>
