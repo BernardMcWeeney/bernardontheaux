@@ -1166,6 +1166,44 @@ p { margin: 0 0 1rem; }
 }
 .highlights-callout p { margin: 0; font-style: italic; color: var(--ink-secondary); }
 
+/* Media gallery */
+.media-gallery {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+.media-section { margin-bottom: 1.5rem; }
+.media-section-title {
+  font-family: var(--font-label);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+}
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+.media-thumb img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  transition: opacity 0.15s ease;
+}
+.media-thumb:hover img { opacity: 0.85; }
+.media-stack { display: flex; flex-direction: column; gap: 0.75rem; }
+.media-video {
+  width: 100%;
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+}
+.media-audio {
+  width: 100%;
+}
+
 /* Playlist embed */
 .playlist-embed {
   margin: 1.5rem 0;

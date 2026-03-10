@@ -4,7 +4,8 @@ const reviews = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
-    artist: z.string(),
+    review_type: z.enum(['album', 'gig', 'artist', 'single', 'ep', 'film', 'other']).default('album'),
+    artist: z.string().optional(),
     review_date: z.date(),
     listened_on: z.date().optional(),
     rating: z.number().min(0).max(10),
@@ -12,6 +13,14 @@ const reviews = defineCollection({
     label: z.string().optional(),
     release_year: z.number().optional(),
     standout_tracks: z.string().optional(),
+    // Gig-specific fields (when review_type is 'gig')
+    venue: z.string().optional(),
+    city: z.string().optional(),
+    event_date: z.date().optional(),
+    // Media attachments
+    images: z.array(z.string()).optional(),
+    videos: z.array(z.string()).optional(),
+    audio: z.array(z.string()).optional(),
     tags: z.array(z.string()).optional(),
     cover: z.string().optional(),
     excerpt: z.string().optional(),

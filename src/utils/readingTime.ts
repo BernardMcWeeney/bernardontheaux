@@ -1,6 +1,7 @@
 const WORDS_PER_MINUTE = 200;
 
-export function calculateReadingTime(content: string): number {
+export function calculateReadingTime(content?: string): number {
+  if (!content) return 1;
   // Strip HTML tags if any
   const text = content.replace(/<[^>]*>/g, '');
 

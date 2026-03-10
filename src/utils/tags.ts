@@ -24,7 +24,7 @@ export async function getAllPosts(): Promise<TaggedPost[]> {
 
   const posts: TaggedPost[] = [
     ...reviews.filter(isPublished).map((entry) => ({
-      title: `${entry.data.artist} — ${entry.data.title}`,
+      title: entry.data.artist ? `${entry.data.artist} — ${entry.data.title}` : entry.data.title,
       slug: entry.slug,
       href: `/reviews/${entry.slug}/`,
       collection: 'reviews',

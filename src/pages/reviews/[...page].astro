@@ -16,6 +16,17 @@ const reviews = (await getCollection('reviews'))
 const allTags = [...new Set(reviews.flatMap((r) => r.data.tags ?? []))].sort();
 const allFormats = [...new Set(reviews.map((r) => r.data.format).filter(Boolean))].sort();
 const allYears = [...new Set(reviews.map((r) => r.data.review_date.getFullYear()))].sort((a, b) => b - a);
+const allTypes = [...new Set(reviews.map((r) => r.data.review_type ?? 'album'))].sort();
+
+const typeLabels: Record<string, string> = {
+  album: 'Album',
+  gig: 'Gig',
+  artist: 'Artist',
+  single: 'Single',
+  ep: 'EP',
+  film: 'Film',
+  other: 'Other',
+};
 ---
 
 <Layout title="Album Reviews | Bernard On The Aux" description="Album reviews with context, restraint, and full-album listening notes.">
@@ -30,6 +41,17 @@ const allYears = [...new Set(reviews.map((r) => r.data.review_date.getFullYear()
     </header>
 
     <div class="filter-bar">
+      {allTypes.length > 1 && (
+        <div class="filter-group">
+          <span class="filter-label">Type</span>
+          <select class="filter-select" data-filter="type">
+            <option value="all">All</option>
+            {allTypes.map((t) => (
+              <option value={t}>{typeLabels[t] ?? t}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <div class="filter-group">
         <span class="filter-label">Rating</span>
         <select class="filter-select" data-filter="rating">
@@ -79,17 +101,18 @@ const allYears = [...new Set(reviews.map((r) => r.data.review_date.getFullYear()
       {reviews.map((entry) => (
         <div
           class="filterable-card"
+          data-type={entry.data.review_type ?? 'album'}
           data-rating={String(entry.data.rating)}
           data-format={entry.data.format ?? ''}
           data-year={String(entry.data.review_date.getFullYear())}
           data-tags={(entry.data.tags ?? []).join(',')}
         >
           <PostCard
-            title={`${entry.data.artist} — ${entry.data.title}`}
+            title={entry.data.artist ? `${entry.data.artist} — ${entry.data.title}` : entry.data.title}
             href={`/reviews/${entry.slug}/`}
             meta={formatDate(entry.data.review_date)}
             excerpt={entry.data.excerpt}
-            label="Review"
+            label={`${typeLabels[entry.data.review_type ?? 'album'] ?? 'Album'} Review`}
             cover={entry.data.cover}
             rating={entry.data.rating}
             square={true}
@@ -126,6 +149,7 @@ const allYears = [...new Set(reviews.map((r) => r.data.review_date.getFullYear()
         else if (filters.rating === '6-8') show = r >= 6 && r < 8;
         else if (filters.rating === 'under6') show = r < 6;
       }
+      if (show && filters.type) show = card.dataset.type === filters.type;
       if (show && filters.format) show = card.dataset.format === filters.format;
       if (show && filters.year) show = card.dataset.year === filters.year;
       if (show && filters.tag) {

@@ -17,25 +17,48 @@ const { Content } = await entry.render();
 const rating = formatRating(entry.data.rating);
 const tags = entry.data.tags ?? [];
 const readingTime = formatReadingTime(calculateReadingTime(entry.body));
+const reviewType = entry.data.review_type ?? 'album';
+const images = entry.data.images ?? [];
+const videos = entry.data.videos ?? [];
+const audio = entry.data.audio ?? [];
+const hasMedia = images.length > 0 || videos.length > 0 || audio.length > 0;
+
+const typeLabels: Record<string, string> = {
+  album: 'Album Review',
+  gig: 'Gig Review',
+  artist: 'Artist Review',
+  single: 'Single Review',
+  ep: 'EP Review',
+  film: 'Film Review',
+  other: 'Review',
+};
+const reviewLabel = typeLabels[reviewType] ?? 'Review';
+const displayTitle = entry.data.artist ? `${entry.data.artist} — ${entry.data.title}` : entry.data.title;
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
 const pageUrl = `${siteUrl}/reviews/${entry.slug}/`;
 
-const musicAlbumLd = {
+const reviewLd: Record<string, unknown> = {
+  '@type': 'Review',
+  author: { '@type': 'Person', name: 'Bernard' },
+  datePublished: entry.data.review_date.toISOString(),
+  reviewBody: entry.data.excerpt ?? '',
+  reviewRating: { '@type': 'Rating', ratingValue: entry.data.rating, bestRating: 10, worstRating: 0 },
+};
+
+const schemaType = reviewType === 'gig' ? 'MusicEvent'
+  : reviewType === 'artist' ? 'MusicGroup'
+  : 'MusicAlbum';
+
+const musicAlbumLd: Record<string, unknown> = {
   '@context': 'https://schema.org',
-  '@type': 'MusicAlbum',
+  '@type': schemaType,
   name: entry.data.title,
-  byArtist: { '@type': 'MusicGroup', name: entry.data.artist },
+  ...(entry.data.artist && { byArtist: { '@type': 'MusicGroup', name: entry.data.artist } }),
   ...(entry.data.release_year && { datePublished: String(entry.data.release_year) }),
   ...(entry.data.cover && { image: new URL(entry.data.cover, siteUrl).toString() }),
   ...(tags.length > 0 && { genre: tags }),
-  review: {
-    '@type': 'Review',
-    author: { '@type': 'Person', name: 'Bernard' },
-    datePublished: entry.data.review_date.toISOString(),
-    reviewBody: entry.data.excerpt ?? '',
-    reviewRating: { '@type': 'Rating', ratingValue: entry.data.rating, bestRating: 10, worstRating: 0 },
-  },
+  review: reviewLd,
 };
 
 const breadcrumbLd = {
@@ -44,20 +67,20 @@ const breadcrumbLd = {
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
     { '@type': 'ListItem', position: 2, name: 'Reviews', item: `${siteUrl}/reviews/` },
-    { '@type': 'ListItem', position: 3, name: `${entry.data.artist} — ${entry.data.title}`, item: pageUrl },
+    { '@type': 'ListItem', position: 3, name: displayTitle, item: pageUrl },
   ],
 };
 ---
 
 <Layout
-  title={`${entry.data.artist} — ${entry.data.title} | Bernard On The Aux`}
-  description={entry.data.excerpt ?? 'Album review from Bernard On The Aux.'}
+  title={`${displayTitle} | Bernard On The Aux`}
+  description={entry.data.excerpt ?? `${reviewLabel} from Bernard On The Aux.`}
   image={entry.data.cover}
   type="article"
   publishedTime={entry.data.review_date}
   tags={tags}
   artist={entry.data.artist}
-  section="Album Reviews"
+  section={reviewLabel + 's'}
 >
   <script type="application/ld+json" set:html={JSON.stringify(musicAlbumLd)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
@@ -69,7 +92,7 @@ const breadcrumbLd = {
       <div class="album-hero">
         <div class="album-hero-art">
           {entry.data.cover ? (
-            <img src={entry.data.cover} alt={`${entry.data.artist} — ${entry.data.title}`} />
+            <img src={entry.data.cover} alt={displayTitle} />
           ) : (
             <div class="album-hero-art-placeholder">
               <Icon name="review" size={56} />
@@ -78,9 +101,9 @@ const breadcrumbLd = {
         </div>
         <div class="album-hero-info">
           <div class="album-hero-badge">
-            <Icon name="review" /> Album Review
+            <Icon name="review" /> {reviewLabel}
           </div>
-          <h1 class="album-hero-title">{entry.data.artist} — {entry.data.title}</h1>
+          <h1 class="album-hero-title">{displayTitle}</h1>
           <div class="album-hero-meta">
             <span>{formatDate(entry.data.review_date)}</span>
             <span>{readingTime}</span>
@@ -99,6 +122,47 @@ const breadcrumbLd = {
             <Content />
           </div>
 
+          {hasMedia && (
+            <div class="media-gallery">
+              {images.length > 0 && (
+                <div class="media-section">
+                  <h3 class="media-section-title">Photos</h3>
+                  <div class="media-grid">
+                    {images.map((src) => (
+                      <a href={src} target="_blank" rel="noopener" class="media-thumb">
+                        <img src={src} alt="" loading="lazy" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {videos.length > 0 && (
+                <div class="media-section">
+                  <h3 class="media-section-title">Video</h3>
+                  <div class="media-stack">
+                    {videos.map((src) => (
+                      <video controls preload="metadata" class="media-video">
+                        <source src={src} />
+                      </video>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {audio.length > 0 && (
+                <div class="media-section">
+                  <h3 class="media-section-title">Audio</h3>
+                  <div class="media-stack">
+                    {audio.map((src) => (
+                      <audio controls preload="metadata" class="media-audio">
+                        <source src={src} />
+                      </audio>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <RelatedPosts
             currentSlug={entry.slug}
             currentCollection="reviews"
@@ -109,11 +173,31 @@ const breadcrumbLd = {
 
         <aside class="post-sidebar">
           <div class="sidebar-card">
-            <p class="sidebar-card-title">Album Info</p>
-            <div class="sidebar-item">
-              <span class="sidebar-item-label">Artist</span>
-              <span class="sidebar-item-value">{entry.data.artist}</span>
-            </div>
+            <p class="sidebar-card-title">{reviewLabel.replace(' Review', '')} Info</p>
+            {entry.data.artist && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Artist</span>
+                <span class="sidebar-item-value">{entry.data.artist}</span>
+              </div>
+            )}
+            {entry.data.venue && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Venue</span>
+                <span class="sidebar-item-value">{entry.data.venue}</span>
+              </div>
+            )}
+            {entry.data.city && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">City</span>
+                <span class="sidebar-item-value">{entry.data.city}</span>
+              </div>
+            )}
+            {entry.data.event_date && (
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Event Date</span>
+                <span class="sidebar-item-value">{formatDate(entry.data.event_date)}</span>
+              </div>
+            )}
             {entry.data.release_year && (
               <div class="sidebar-item">
                 <span class="sidebar-item-label">Year</span>
