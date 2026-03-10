@@ -1,12 +1,13 @@
 ---
-title: "Moncrieff Bundoran Sea Sessions 2023"
-artist: "Moncrieff"
-venue: "Sea Sessions"
-city: "Bundoran, Co. Donegal, Ireland"
+title: Moncrieff Bundoran Sea Sessions 2023
+artist: Moncrieff
+venue: Sea Sessions
+city: Bundoran, Co. Donegal, Ireland
 event_date: 2023-06-17
 tags:
   - Sea-Sessions
-excerpt: "Set notes from Moncrieff at Sea Sessions 2023."
+cover: /media/Moncrieff Bundoran Sea Sessions 2023.jpg
+excerpt: Set notes from Moncrieff at Sea Sessions 2023.
 published: true
+featured: false
 ---
-Notes from Moncrieff's set at Sea Sessions 2023 in Bundoran, Co. Donegal, Ireland.
