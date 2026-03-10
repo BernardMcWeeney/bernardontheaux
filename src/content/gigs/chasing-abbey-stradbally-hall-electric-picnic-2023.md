@@ -1,12 +1,13 @@
 ---
-title: "Chasing Abbey Stradbally Hall Electric Picnic 2023"
-artist: "Chasing Abbey"
-venue: "Stradbally Hall"
-city: "Stradbally, Co. Laois, Ireland"
+title: Chasing Abbey Stradbally Hall Electric Picnic 2023
+artist: Chasing Abbey
+venue: Stradbally Hall
+city: Stradbally, Co. Laois, Ireland
 event_date: 2023-09-03
 tags:
   - Electric-Picnic
-excerpt: "Set notes from Chasing Abbey at Electric Picnic 2023."
+cover: /media/Chasing Abbey Stradbally Hall Electric Picnic 2023.jpg
+excerpt: Set notes from Chasing Abbey at Electric Picnic 2023.
 published: true
+featured: false
 ---
-Notes from Chasing Abbey's set at Electric Picnic 2023 in Stradbally, Co. Laois, Ireland.
