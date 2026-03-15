@@ -5,9 +5,9 @@
   "compatibility_date": "2026-02-04",
   "compatibility_flags": ["nodejs_compat"],
 
-  // Custom build: platform=node avoids TinaCMS browser bundles that reference `document`
+  // Custom build: platform=node avoids browser bundles, banner polyfills require for CJS deps
   "build": {
-    "command": "npx esbuild worker.ts --bundle --outfile=dist-worker/worker.js --platform=node --format=esm --external:better-sqlite3 --external:libsql --external:fsevents"
+    "command": "node build-worker.mjs"
   },
 
   // Static assets from Astro build output
