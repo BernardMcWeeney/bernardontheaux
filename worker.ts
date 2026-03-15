@@ -1,4 +1,10 @@
-import database from './tina/database';
+import { createDatabase } from '@tinacms/datalayer';
+import { GitHubProvider } from 'tinacms-gitprovider-github';
+import { Redis } from '@upstash/redis';
+import RedisLevelPkg from 'upstash-redis-level';
+
+// Handle CJS/ESM interop — the package may export RedisLevel as default or named
+const RedisLevel = (RedisLevelPkg as any).RedisLevel ?? RedisLevelPkg;
 
 interface Env {
   CF_ACCESS_TEAM_DOMAIN: string;
@@ -30,11 +36,9 @@ async function verifyAccessJwt(
 
   const [headerB64, payloadB64, signatureB64] = parts;
 
-  // Decode header to find key ID
   const header = JSON.parse(new TextDecoder().decode(base64UrlDecode(headerB64)));
   if (!header.kid) return false;
 
-  // Fetch Cloudflare Access public keys
   const certsUrl = `https://${teamDomain}.cloudflareaccess.com/cdn-cgi/access/certs`;
   const certsRes = await fetch(certsUrl);
   if (!certsRes.ok) return false;
@@ -43,7 +47,6 @@ async function verifyAccessJwt(
   const jwk = keys.find((k: any) => k.kid === header.kid);
   if (!jwk) return false;
 
-  // Import public key and verify signature
   const publicKey = await crypto.subtle.importKey(
     'jwk',
     jwk,
@@ -58,7 +61,6 @@ async function verifyAccessJwt(
   const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', publicKey, signature, data);
   if (!valid) return false;
 
-  // Check audience and expiry
   const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(payloadB64)));
   if (Array.isArray(payload.aud) ? !payload.aud.includes(aud) : payload.aud !== aud) {
     return false;
@@ -66,6 +68,35 @@ async function verifyAccessJwt(
   if (payload.exp && Date.now() / 1000 > payload.exp) return false;
 
   return true;
+}
+
+// --- Production database (created once per Worker instance) ---
+
+let _db: ReturnType<typeof createDatabase> | null = null;
+
+function getDatabase(env: Env) {
+  if (_db) return _db;
+
+  const branch = env.GITHUB_BRANCH || 'main';
+
+  _db = createDatabase({
+    gitProvider: new GitHubProvider({
+      repo: env.GITHUB_REPO,
+      owner: env.GITHUB_OWNER,
+      token: env.GITHUB_PERSONAL_ACCESS_TOKEN,
+      branch,
+    }),
+    databaseAdapter: new RedisLevel({
+      redis: new Redis({
+        url: env.KV_REST_API_URL,
+        token: env.KV_REST_API_TOKEN,
+      }),
+      debug: false,
+      namespace: branch,
+    }),
+  });
+
+  return _db;
 }
 
 // --- Worker entry ---
@@ -105,17 +136,10 @@ export default {
       return jsonError('Forbidden: invalid access token', 403);
     }
 
-    // Bridge Worker env to process.env for TinaCMS database module
-    process.env.GITHUB_OWNER = env.GITHUB_OWNER;
-    process.env.GITHUB_REPO = env.GITHUB_REPO;
-    process.env.GITHUB_PERSONAL_ACCESS_TOKEN = env.GITHUB_PERSONAL_ACCESS_TOKEN;
-    process.env.GITHUB_BRANCH = env.GITHUB_BRANCH;
-    process.env.KV_REST_API_URL = env.KV_REST_API_URL;
-    process.env.KV_REST_API_TOKEN = env.KV_REST_API_TOKEN;
-
     // Handle /api/tina/gql
     if (url.pathname === '/api/tina/gql' && request.method === 'POST') {
       try {
+        const database = getDatabase(env);
         const { query, variables } = (await request.json()) as {
           query: string;
           variables?: Record<string, unknown>;
