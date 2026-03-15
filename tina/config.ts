@@ -1,13 +1,12 @@
 import { defineConfig } from 'tinacms';
 
-export default defineConfig({
-  branch: process.env.GITHUB_BRANCH ||
-    process.env.VERCEL_GIT_COMMIT_REF ||
-    process.env.HEAD ||
-    'main',
+const isLocal = process.env.TINA_PUBLIC_IS_LOCAL === 'true';
 
-  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID || '',
-  token: process.env.TINA_TOKEN || '',
+export default defineConfig({
+  branch: process.env.GITHUB_BRANCH || 'main',
+
+  // Self-hosted: point the admin UI to our own API
+  contentApiUrlOverride: '/api/tina/gql',
 
   build: {
     outputFolder: 'admin',

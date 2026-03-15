@@ -6,7 +6,7 @@ import GigPage from '../../components/tina/GigPage';
 import { getCollection, render } from 'astro:content';
 import { formatDate } from '../../utils/format';
 import { slugifyTag } from '../../utils/tags';
-import client from '../../../tina/__generated__/client';
+import client from '../../../tina/__generated__/databaseClient';
 
 export async function getStaticPaths() {
   const entries = await getCollection('gigs');
