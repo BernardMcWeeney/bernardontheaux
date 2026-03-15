@@ -15,8 +15,8 @@ export const GET: APIRoute = async () => {
   const searchIndex = [
     ...reviews.filter(isPublished).map((entry) => ({
       title: `${entry.data.artist} — ${entry.data.title}`,
-      slug: entry.slug,
-      href: `/reviews/${entry.slug}/`,
+      slug: entry.id,
+      href: `/reviews/${entry.id}/`,
       collection: 'reviews',
       collectionLabel: 'Review',
       excerpt: entry.data.excerpt ?? '',
@@ -26,8 +26,8 @@ export const GET: APIRoute = async () => {
     })),
     ...gigs.filter(isPublished).map((entry) => ({
       title: entry.data.title,
-      slug: entry.slug,
-      href: `/gigs/${entry.slug}/`,
+      slug: entry.id,
+      href: `/gigs/${entry.id}/`,
       collection: 'gigs',
       collectionLabel: 'Gig diary',
       excerpt: entry.data.excerpt ?? '',
@@ -37,8 +37,8 @@ export const GET: APIRoute = async () => {
     })),
     ...deepDives.filter(isPublished).map((entry) => ({
       title: entry.data.title,
-      slug: entry.slug,
-      href: `/deep-dives/${entry.slug}/`,
+      slug: entry.id,
+      href: `/deep-dives/${entry.id}/`,
       collection: 'deep-dives',
       collectionLabel: 'Deep dive',
       excerpt: entry.data.excerpt ?? '',
@@ -48,8 +48,8 @@ export const GET: APIRoute = async () => {
     })),
     ...playlists.filter(isPublished).map((entry) => ({
       title: entry.data.title,
-      slug: entry.slug,
-      href: `/playlists/${entry.slug}/`,
+      slug: entry.id,
+      href: `/playlists/${entry.id}/`,
       collection: 'playlists',
       collectionLabel: 'Playlist',
       excerpt: entry.data.excerpt ?? '',
@@ -59,8 +59,8 @@ export const GET: APIRoute = async () => {
     })),
     ...notes.filter(isPublished).map((entry) => ({
       title: entry.data.title,
-      slug: entry.slug,
-      href: `/notes/${entry.slug}/`,
+      slug: entry.id,
+      href: `/notes/${entry.id}/`,
       collection: 'notes',
       collectionLabel: 'Listening note',
       excerpt: entry.data.excerpt ?? '',

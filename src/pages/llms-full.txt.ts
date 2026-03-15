@@ -27,7 +27,7 @@ export const GET: APIRoute = async () => {
   for (const entry of pubReviews) {
     const d = entry.data;
     lines.push(`### ${d.artist} — ${d.title}`);
-    lines.push(`- URL: https://bernardontheaux.com/reviews/${entry.slug}/`);
+    lines.push(`- URL: https://bernardontheaux.com/reviews/${entry.id}/`);
     lines.push(`- Rating: ${d.rating}/10`);
     lines.push(`- Review Date: ${d.review_date.toISOString().split('T')[0]}`);
     if (d.release_year) lines.push(`- Release Year: ${d.release_year}`);
@@ -46,7 +46,7 @@ export const GET: APIRoute = async () => {
   for (const entry of pubGigs) {
     const d = entry.data;
     lines.push(`### ${d.title}`);
-    lines.push(`- URL: https://bernardontheaux.com/gigs/${entry.slug}/`);
+    lines.push(`- URL: https://bernardontheaux.com/gigs/${entry.id}/`);
     lines.push(`- Artist: ${d.artist}`);
     lines.push(`- Venue: ${d.venue}, ${d.city}`);
     lines.push(`- Date: ${d.event_date.toISOString().split('T')[0]}`);
@@ -65,7 +65,7 @@ export const GET: APIRoute = async () => {
   for (const entry of pubDives) {
     const d = entry.data;
     lines.push(`### ${d.title}`);
-    lines.push(`- URL: https://bernardontheaux.com/deep-dives/${entry.slug}/`);
+    lines.push(`- URL: https://bernardontheaux.com/deep-dives/${entry.id}/`);
     lines.push(`- Published: ${d.published_on.toISOString().split('T')[0]}`);
     if (d.topic) lines.push(`- Topic: ${d.topic}`);
     if (d.era) lines.push(`- Era: ${d.era}`);
@@ -81,7 +81,7 @@ export const GET: APIRoute = async () => {
   for (const entry of pubPlaylists) {
     const d = entry.data;
     lines.push(`### ${d.title}`);
-    lines.push(`- URL: https://bernardontheaux.com/playlists/${entry.slug}/`);
+    lines.push(`- URL: https://bernardontheaux.com/playlists/${entry.id}/`);
     lines.push(`- Platform: ${d.platform}`);
     lines.push(`- Playlist Link: ${d.playlist_url}`);
     lines.push(`- Published: ${d.published_on.toISOString().split('T')[0]}`);
@@ -99,7 +99,7 @@ export const GET: APIRoute = async () => {
   for (const entry of pubNotes) {
     const d = entry.data;
     lines.push(`### ${d.title}`);
-    lines.push(`- URL: https://bernardontheaux.com/notes/${entry.slug}/`);
+    lines.push(`- URL: https://bernardontheaux.com/notes/${entry.id}/`);
     lines.push(`- Listened: ${d.listened_on.toISOString().split('T')[0]}`);
     if (d.artist) lines.push(`- Artist: ${d.artist}`);
     if (d.source) lines.push(`- Source: ${d.source}`);

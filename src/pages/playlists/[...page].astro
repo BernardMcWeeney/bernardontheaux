@@ -59,7 +59,7 @@ const allTags = [...new Set(playlists.flatMap((p) => p.data.tags ?? []))].sort()
         <div class="filterable-card" data-platform={entry.data.platform} data-tags={(entry.data.tags ?? []).join(',')}>
           <PostCard
             title={entry.data.title}
-            href={`/playlists/${entry.slug}/`}
+            href={`/playlists/${entry.id}/`}
             meta={`${formatDate(entry.data.published_on)} · ${entry.data.platform}`}
             excerpt={entry.data.excerpt}
             label="Playlist"

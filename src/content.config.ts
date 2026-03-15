@@ -1,7 +1,8 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 const reviews = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/reviews' }),
   schema: z.object({
     title: z.string(),
     review_type: z.enum(['album', 'gig', 'artist', 'single', 'ep', 'film', 'other']).default('album'),
@@ -31,7 +32,7 @@ const reviews = defineCollection({
 });
 
 const gigs = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/gigs' }),
   schema: z.object({
     title: z.string(),
     artist: z.string(),
@@ -50,7 +51,7 @@ const gigs = defineCollection({
 });
 
 const deepDives = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/deep-dives' }),
   schema: z.object({
     title: z.string(),
     published_on: z.date(),
@@ -65,7 +66,7 @@ const deepDives = defineCollection({
 });
 
 const playlists = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/playlists' }),
   schema: z.object({
     title: z.string(),
     published_on: z.date(),
@@ -83,7 +84,7 @@ const playlists = defineCollection({
 });
 
 const notes = defineCollection({
-  type: 'content',
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/notes' }),
   schema: z.object({
     title: z.string(),
     listened_on: z.date(),

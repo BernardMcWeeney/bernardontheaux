@@ -89,7 +89,7 @@ const allTags = [...new Set(gigs.flatMap((g) => g.data.tags ?? []))].sort();
         >
           <PostCard
             title={entry.data.title}
-            href={`/gigs/${entry.slug}/`}
+            href={`/gigs/${entry.id}/`}
             meta={`${formatDate(entry.data.event_date)} · ${entry.data.city}`}
             excerpt={entry.data.excerpt}
             label="Gig"

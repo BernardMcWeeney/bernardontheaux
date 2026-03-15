@@ -19,7 +19,7 @@ const sliderPosts = [
   ...reviews.slice(0, 3).map((r) => ({
     type: 'review' as const,
     title: `${r.data.artist} — ${r.data.title}`,
-    href: `/reviews/${r.slug}/`,
+    href: `/reviews/${r.id}/`,
     meta: `${formatDate(r.data.review_date)} · ${r.data.rating}/10`,
     excerpt: r.data.excerpt,
     cover: r.data.cover,
@@ -31,7 +31,7 @@ const sliderPosts = [
   ...gigs.slice(0, 2).map((g) => ({
     type: 'gig' as const,
     title: g.data.title,
-    href: `/gigs/${g.slug}/`,
+    href: `/gigs/${g.id}/`,
     meta: `${formatDate(g.data.event_date)} · ${g.data.city}`,
     excerpt: g.data.excerpt,
     cover: g.data.cover,
@@ -43,7 +43,7 @@ const sliderPosts = [
   ...deepDives.slice(0, 1).map((d) => ({
     type: 'deep-dive' as const,
     title: d.data.title,
-    href: `/deep-dives/${d.slug}/`,
+    href: `/deep-dives/${d.id}/`,
     meta: formatDate(d.data.published_on),
     excerpt: d.data.excerpt,
     cover: d.data.cover,
@@ -88,18 +88,18 @@ const songOfWeekMeta = hasTrackPick && latestReview
   ? `Selected this week · ${formatDate(latestReview.data.review_date)}`
   : latestNote ? `Logged ${formatDate(latestNote.data.listened_on)}` : 'Check back after the next listen';
 const songOfWeekHref = hasTrackPick && latestReview
-  ? `/reviews/${latestReview.slug}/`
-  : latestNote ? `/notes/${latestNote.slug}/` : '/reviews/';
+  ? `/reviews/${latestReview.id}/`
+  : latestNote ? `/notes/${latestNote.id}/` : '/reviews/';
 
 const noteTs = latestNote ? latestNote.data.listened_on.valueOf() : 0;
 const playlistTs = latestPlaylist ? latestPlaylist.data.published_on.valueOf() : 0;
 
 const nowListening = playlistTs > noteTs && latestPlaylist
-  ? { title: latestPlaylist.data.title, subtitle: `${latestPlaylist.data.platform} playlist`, meta: `Updated ${formatDate(latestPlaylist.data.published_on)}`, href: `/playlists/${latestPlaylist.slug}/`, cta: 'Open playlist' }
+  ? { title: latestPlaylist.data.title, subtitle: `${latestPlaylist.data.platform} playlist`, meta: `Updated ${formatDate(latestPlaylist.data.published_on)}`, href: `/playlists/${latestPlaylist.id}/`, cta: 'Open playlist' }
   : latestNote
-    ? { title: latestNote.data.title, subtitle: latestNote.data.artist ?? 'Listening note', meta: `Logged ${formatDate(latestNote.data.listened_on)}`, href: `/notes/${latestNote.slug}/`, cta: 'Read note' }
+    ? { title: latestNote.data.title, subtitle: latestNote.data.artist ?? 'Listening note', meta: `Logged ${formatDate(latestNote.data.listened_on)}`, href: `/notes/${latestNote.id}/`, cta: 'Read note' }
     : latestReview
-      ? { title: `${latestReview.data.artist} — ${latestReview.data.title}`, subtitle: 'Latest album review', meta: `Reviewed ${formatDate(latestReview.data.review_date)}`, href: `/reviews/${latestReview.slug}/`, cta: 'Read review' }
+      ? { title: `${latestReview.data.artist} — ${latestReview.data.title}`, subtitle: 'Latest album review', meta: `Reviewed ${formatDate(latestReview.data.review_date)}`, href: `/reviews/${latestReview.id}/`, cta: 'Read review' }
       : { title: 'No listen logged yet', subtitle: 'Music in motion', meta: 'New updates coming soon', href: '/archive/', cta: 'Browse archive' };
 
 const formatLinks = [
@@ -201,7 +201,7 @@ const latestDeepDive = deepDives[0];
           <p class="signal-meta">
             {albumOfMonth ? `Reviewed ${formatDate(albumOfMonth.data.review_date)}` : 'Keep listening'}
           </p>
-          <a class="signal-link" href={albumOfMonth ? `/reviews/${albumOfMonth.slug}/` : '/reviews/'}>Read review</a>
+          <a class="signal-link" href={albumOfMonth ? `/reviews/${albumOfMonth.id}/` : '/reviews/'}>Read review</a>
         </article>
 
         <article class="signal-card">
@@ -242,7 +242,7 @@ const latestDeepDive = deepDives[0];
           {pinnedReviews.map((entry) => (
             <PostCard
               title={`${entry.data.artist} — ${entry.data.title}`}
-              href={`/reviews/${entry.slug}/`}
+              href={`/reviews/${entry.id}/`}
               meta={`${formatDate(entry.data.review_date)} · ${entry.data.rating}/10`}
               excerpt={entry.data.excerpt}
               label="Pinned"
@@ -269,7 +269,7 @@ const latestDeepDive = deepDives[0];
         {latestReviews.map((entry) => (
           <PostCard
             title={`${entry.data.artist} — ${entry.data.title}`}
-            href={`/reviews/${entry.slug}/`}
+            href={`/reviews/${entry.id}/`}
             meta={`${formatDate(entry.data.review_date)} · ${entry.data.rating}/10`}
             excerpt={entry.data.excerpt}
             label="Review"
@@ -294,7 +294,7 @@ const latestDeepDive = deepDives[0];
         {latestGig && (
           <PostCard
             title={latestGig.data.title}
-            href={`/gigs/${latestGig.slug}/`}
+            href={`/gigs/${latestGig.id}/`}
             meta={`${formatDate(latestGig.data.event_date)} · ${latestGig.data.city}`}
             excerpt={latestGig.data.excerpt}
             label="Gig"
@@ -305,7 +305,7 @@ const latestDeepDive = deepDives[0];
         {latestDeepDive && (
           <PostCard
             title={latestDeepDive.data.title}
-            href={`/deep-dives/${latestDeepDive.slug}/`}
+            href={`/deep-dives/${latestDeepDive.id}/`}
             meta={formatDate(latestDeepDive.data.published_on)}
             excerpt={latestDeepDive.data.excerpt}
             label="Deep Dive"
@@ -316,7 +316,7 @@ const latestDeepDive = deepDives[0];
         {latestPlaylist && (
           <PostCard
             title={latestPlaylist.data.title}
-            href={`/playlists/${latestPlaylist.slug}/`}
+            href={`/playlists/${latestPlaylist.id}/`}
             meta={`${formatDate(latestPlaylist.data.published_on)} · ${latestPlaylist.data.platform}`}
             excerpt={latestPlaylist.data.excerpt}
             label="Playlist"
@@ -327,7 +327,7 @@ const latestDeepDive = deepDives[0];
         {latestNote && (
           <PostCard
             title={latestNote.data.title}
-            href={`/notes/${latestNote.slug}/`}
+            href={`/notes/${latestNote.id}/`}
             meta={formatDate(latestNote.data.listened_on)}
             excerpt={latestNote.data.excerpt}
             label="Note"

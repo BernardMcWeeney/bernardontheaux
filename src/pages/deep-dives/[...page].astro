@@ -50,7 +50,7 @@ const allTags = [...new Set(deepDives.flatMap((d) => d.data.tags ?? []))].sort()
         >
           <PostCard
             title={entry.data.title}
-            href={`/deep-dives/${entry.slug}/`}
+            href={`/deep-dives/${entry.id}/`}
             meta={formatDate(entry.data.published_on)}
             excerpt={entry.data.excerpt}
             label="Deep Dive"

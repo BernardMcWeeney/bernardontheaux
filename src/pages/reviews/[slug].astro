@@ -2,26 +2,31 @@
 import Layout from '../../layouts/Layout.astro';
 import RelatedPosts from '../../components/RelatedPosts.astro';
 import Icon from '../../components/Icon.astro';
-import { getCollection } from 'astro:content';
+import ReviewPage from '../../components/tina/ReviewPage';
+import { getCollection, render } from 'astro:content';
 import { formatDate, formatRating } from '../../utils/format';
 import { slugifyTag } from '../../utils/tags';
 import { calculateReadingTime, formatReadingTime } from '../../utils/readingTime';
+import client from '../../../tina/__generated__/client';
 
 export async function getStaticPaths() {
   const entries = await getCollection('reviews');
-  return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
 
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+const slug = Astro.params.slug!;
+
+let tinaData: any = null;
+try {
+  tinaData = await client.queries.reviews({ relativePath: `${slug}.md` });
+} catch {}
+
+const { Content } = await render(entry);
 const rating = formatRating(entry.data.rating);
 const tags = entry.data.tags ?? [];
 const readingTime = formatReadingTime(calculateReadingTime(entry.body));
 const reviewType = entry.data.review_type ?? 'album';
-const images = entry.data.images ?? [];
-const videos = entry.data.videos ?? [];
-const audio = entry.data.audio ?? [];
-const hasMedia = images.length > 0 || videos.length > 0 || audio.length > 0;
 
 const typeLabels: Record<string, string> = {
   album: 'Album Review',
@@ -36,7 +41,7 @@ const reviewLabel = typeLabels[reviewType] ?? 'Review';
 const displayTitle = entry.data.artist ? `${entry.data.artist} — ${entry.data.title}` : entry.data.title;
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
-const pageUrl = `${siteUrl}/reviews/${entry.slug}/`;
+const pageUrl = `${siteUrl}/reviews/${entry.id}/`;
 
 const reviewLd: Record<string, unknown> = {
   '@type': 'Review',
@@ -84,165 +89,115 @@ const breadcrumbLd = {
 >
   <script type="application/ld+json" set:html={JSON.stringify(musicAlbumLd)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  <div class="container">
-    <div class="post-layout">
-      <a class="post-back" href="/reviews/">← Back to Reviews</a>
 
-      <!-- Album hero: square art + title/rating side by side -->
-      <div class="album-hero">
-        <div class="album-hero-art">
-          {entry.data.cover ? (
-            <img src={entry.data.cover} alt={displayTitle} />
-          ) : (
-            <div class="album-hero-art-placeholder">
-              <Icon name="review" size={56} />
+  {tinaData ? (
+    <ReviewPage
+      client:only="react"
+      query={tinaData.query}
+      variables={tinaData.variables}
+      data={tinaData.data}
+    />
+  ) : (
+    <div class="container">
+      <div class="post-layout">
+        <a class="post-back" href="/reviews/">← Back to Reviews</a>
+
+        <div class="album-hero">
+          <div class="album-hero-art">
+            {entry.data.cover ? (
+              <img src={entry.data.cover} alt={displayTitle} />
+            ) : (
+              <div class="album-hero-art-placeholder">
+                <Icon name="review" size={56} />
+              </div>
+            )}
+          </div>
+          <div class="album-hero-info">
+            <div class="album-hero-badge">
+              <Icon name="review" /> {reviewLabel}
             </div>
-          )}
-        </div>
-        <div class="album-hero-info">
-          <div class="album-hero-badge">
-            <Icon name="review" /> {reviewLabel}
-          </div>
-          <h1 class="album-hero-title">{displayTitle}</h1>
-          <div class="album-hero-meta">
-            <span>{formatDate(entry.data.review_date)}</span>
-            <span>{readingTime}</span>
-            {entry.data.format && <span>{entry.data.format}</span>}
-          </div>
-          <div class="album-hero-rating">
-            <span class="album-hero-rating-number">{rating}</span>
-            <span class="album-hero-rating-suffix">/10</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="post-content">
-        <div class="post-main">
-          <div class="post-body">
-            <Content />
-          </div>
-
-          {hasMedia && (
-            <div class="media-gallery">
-              {images.length > 0 && (
-                <div class="media-section">
-                  <h3 class="media-section-title">Photos</h3>
-                  <div class="media-grid">
-                    {images.map((src) => (
-                      <a href={src} target="_blank" rel="noopener" class="media-thumb">
-                        <img src={src} alt="" loading="lazy" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {videos.length > 0 && (
-                <div class="media-section">
-                  <h3 class="media-section-title">Video</h3>
-                  <div class="media-stack">
-                    {videos.map((src) => (
-                      <video controls preload="metadata" class="media-video">
-                        <source src={src} />
-                      </video>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {audio.length > 0 && (
-                <div class="media-section">
-                  <h3 class="media-section-title">Audio</h3>
-                  <div class="media-stack">
-                    {audio.map((src) => (
-                      <audio controls preload="metadata" class="media-audio">
-                        <source src={src} />
-                      </audio>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <h1 class="album-hero-title">{displayTitle}</h1>
+            <div class="album-hero-meta">
+              <span>{formatDate(entry.data.review_date)}</span>
+              <span>{readingTime}</span>
+              {entry.data.format && <span>{entry.data.format}</span>}
             </div>
-          )}
-
-          <RelatedPosts
-            currentSlug={entry.slug}
-            currentCollection="reviews"
-            currentTags={tags}
-            currentArtist={entry.data.artist}
-          />
+            <div class="album-hero-rating">
+              <span class="album-hero-rating-number">{rating}</span>
+              <span class="album-hero-rating-suffix">/10</span>
+            </div>
+          </div>
         </div>
 
-        <aside class="post-sidebar">
-          <div class="sidebar-card">
-            <p class="sidebar-card-title">{reviewLabel.replace(' Review', '')} Info</p>
-            {entry.data.artist && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Artist</span>
-                <span class="sidebar-item-value">{entry.data.artist}</span>
-              </div>
-            )}
-            {entry.data.venue && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Venue</span>
-                <span class="sidebar-item-value">{entry.data.venue}</span>
-              </div>
-            )}
-            {entry.data.city && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">City</span>
-                <span class="sidebar-item-value">{entry.data.city}</span>
-              </div>
-            )}
-            {entry.data.event_date && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Event Date</span>
-                <span class="sidebar-item-value">{formatDate(entry.data.event_date)}</span>
-              </div>
-            )}
-            {entry.data.release_year && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Year</span>
-                <span class="sidebar-item-value">{entry.data.release_year}</span>
-              </div>
-            )}
-            {entry.data.format && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Format</span>
-                <span class="sidebar-item-value">{entry.data.format}</span>
-              </div>
-            )}
-            {entry.data.label && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Label</span>
-                <span class="sidebar-item-value">{entry.data.label}</span>
-              </div>
-            )}
-            {entry.data.listened_on && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Listened</span>
-                <span class="sidebar-item-value">{formatDate(entry.data.listened_on)}</span>
-              </div>
-            )}
+        <div class="post-content">
+          <div class="post-main">
+            <div class="post-body">
+              <Content />
+            </div>
+
+            <RelatedPosts
+              currentSlug={entry.id}
+              currentCollection="reviews"
+              currentTags={tags}
+              currentArtist={entry.data.artist}
+            />
           </div>
 
-          {entry.data.standout_tracks && (
+          <aside class="post-sidebar">
             <div class="sidebar-card">
-              <p class="sidebar-card-title">Standout Tracks</p>
-              <p style="margin:0;font-size:0.9rem;color:var(--ink-secondary);line-height:1.6">{entry.data.standout_tracks}</p>
+              <p class="sidebar-card-title">{reviewLabel.replace(' Review', '')} Info</p>
+              {entry.data.artist && (
+                <div class="sidebar-item">
+                  <span class="sidebar-item-label">Artist</span>
+                  <span class="sidebar-item-value">{entry.data.artist}</span>
+                </div>
+              )}
+              {entry.data.release_year && (
+                <div class="sidebar-item">
+                  <span class="sidebar-item-label">Year</span>
+                  <span class="sidebar-item-value">{entry.data.release_year}</span>
+                </div>
+              )}
+              {entry.data.format && (
+                <div class="sidebar-item">
+                  <span class="sidebar-item-label">Format</span>
+                  <span class="sidebar-item-value">{entry.data.format}</span>
+                </div>
+              )}
+              {entry.data.label && (
+                <div class="sidebar-item">
+                  <span class="sidebar-item-label">Label</span>
+                  <span class="sidebar-item-value">{entry.data.label}</span>
+                </div>
+              )}
+              {entry.data.listened_on && (
+                <div class="sidebar-item">
+                  <span class="sidebar-item-label">Listened</span>
+                  <span class="sidebar-item-value">{formatDate(entry.data.listened_on)}</span>
+                </div>
+              )}
             </div>
-          )}
 
-          {tags.length > 0 && (
-            <div class="sidebar-card">
-              <p class="sidebar-card-title">Tags</p>
-              <div class="detail-tags">
-                {tags.map((tag) => (
-                  <a href={`/tags/${slugifyTag(tag)}/`} class="detail-tag">{tag}</a>
-                ))}
+            {entry.data.standout_tracks && (
+              <div class="sidebar-card">
+                <p class="sidebar-card-title">Standout Tracks</p>
+                <p style="margin:0;font-size:0.9rem;color:var(--ink-secondary);line-height:1.6">{entry.data.standout_tracks}</p>
               </div>
-            </div>
-          )}
-        </aside>
+            )}
+
+            {tags.length > 0 && (
+              <div class="sidebar-card">
+                <p class="sidebar-card-title">Tags</p>
+                <div class="detail-tags">
+                  {tags.map((tag) => (
+                    <a href={`/tags/${slugifyTag(tag)}/`} class="detail-tag">{tag}</a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
       </div>
     </div>
-  </div>
+  )}
 </Layout>

@@ -109,7 +109,7 @@ const typeLabels: Record<string, string> = {
         >
           <PostCard
             title={entry.data.artist ? `${entry.data.artist} — ${entry.data.title}` : entry.data.title}
-            href={`/reviews/${entry.slug}/`}
+            href={`/reviews/${entry.id}/`}
             meta={formatDate(entry.data.review_date)}
             excerpt={entry.data.excerpt}
             label={`${typeLabels[entry.data.review_type ?? 'album'] ?? 'Album'} Review`}

@@ -2,18 +2,27 @@
 import Layout from '../../layouts/Layout.astro';
 import RelatedPosts from '../../components/RelatedPosts.astro';
 import Icon from '../../components/Icon.astro';
-import { getCollection } from 'astro:content';
+import DeepDivePage from '../../components/tina/DeepDivePage';
+import { getCollection, render } from 'astro:content';
 import { formatDate } from '../../utils/format';
 import { slugifyTag } from '../../utils/tags';
 import { calculateReadingTime, formatReadingTime } from '../../utils/readingTime';
+import client from '../../../tina/__generated__/client';
 
 export async function getStaticPaths() {
   const entries = await getCollection('deep-dives');
-  return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
 
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+const slug = Astro.params.slug!;
+
+let tinaData: any = null;
+try {
+  tinaData = await client.queries.deep_dives({ relativePath: `${slug}.md` });
+} catch {}
+
+const { Content } = await render(entry);
 const tags = entry.data.tags ?? [];
 const readingTime = formatReadingTime(calculateReadingTime(entry.body));
 
@@ -24,7 +33,7 @@ const breadcrumbLd = {
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
     { '@type': 'ListItem', position: 2, name: 'Deep Dives', item: `${siteUrl}/deep-dives/` },
-    { '@type': 'ListItem', position: 3, name: entry.data.title, item: `${siteUrl}/deep-dives/${entry.slug}/` },
+    { '@type': 'ListItem', position: 3, name: entry.data.title, item: `${siteUrl}/deep-dives/${entry.id}/` },
   ],
 };
 ---
@@ -39,81 +48,91 @@ const breadcrumbLd = {
   section="Deep Dives"
 >
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  <div class="container">
-    <div class="post-layout">
-      <a class="post-back" href="/deep-dives/">← Back to Deep Dives</a>
 
-      <div class="post-banner">
-        {entry.data.cover ? (
-          <img src={entry.data.cover} alt={entry.data.title} />
-        ) : (
-          <div class="post-banner-placeholder">
-            <Icon name="dive" size={56} />
-          </div>
-        )}
-      </div>
+  {tinaData ? (
+    <DeepDivePage
+      client:only="react"
+      query={tinaData.query}
+      variables={tinaData.variables}
+      data={tinaData.data}
+    />
+  ) : (
+    <div class="container">
+      <div class="post-layout">
+        <a class="post-back" href="/deep-dives/">← Back to Deep Dives</a>
 
-      <div class="post-content">
-        <div class="post-main">
-          <header class="post-header-detail">
-            <div class="post-collection-badge badge-dive">
-              <Icon name="dive" /> Deep Dive
+        <div class="post-banner">
+          {entry.data.cover ? (
+            <img src={entry.data.cover} alt={entry.data.title} />
+          ) : (
+            <div class="post-banner-placeholder">
+              <Icon name="dive" size={56} />
             </div>
-            <h1 class="post-title-detail">{entry.data.title}</h1>
-            <div class="post-meta-strip">
-              <span>{formatDate(entry.data.published_on)}</span>
-              <span>{readingTime}</span>
-              {entry.data.topic && <span>{entry.data.topic}</span>}
-              {entry.data.era && <span>{entry.data.era}</span>}
-            </div>
-          </header>
-
-          <div class="post-body">
-            <Content />
-          </div>
-
-          <RelatedPosts
-            currentSlug={entry.slug}
-            currentCollection="deep-dives"
-            currentTags={tags}
-          />
+          )}
         </div>
 
-        <aside class="post-sidebar">
-          {(entry.data.topic || entry.data.era) && (
-            <div class="sidebar-card">
-              <p class="sidebar-card-title">Details</p>
-              {entry.data.topic && (
-                <div class="sidebar-item">
-                  <span class="sidebar-item-label">Topic</span>
-                  <span class="sidebar-item-value">{entry.data.topic}</span>
-                </div>
-              )}
-              {entry.data.era && (
-                <div class="sidebar-item">
-                  <span class="sidebar-item-label">Era</span>
-                  <span class="sidebar-item-value">{entry.data.era}</span>
-                </div>
-              )}
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Reading Time</span>
-                <span class="sidebar-item-value">{readingTime}</span>
+        <div class="post-content">
+          <div class="post-main">
+            <header class="post-header-detail">
+              <div class="post-collection-badge badge-dive">
+                <Icon name="dive" /> Deep Dive
               </div>
-            </div>
-          )}
+              <h1 class="post-title-detail">{entry.data.title}</h1>
+              <div class="post-meta-strip">
+                <span>{formatDate(entry.data.published_on)}</span>
+                <span>{readingTime}</span>
+                {entry.data.topic && <span>{entry.data.topic}</span>}
+                {entry.data.era && <span>{entry.data.era}</span>}
+              </div>
+            </header>
 
-          {tags.length > 0 && (
-            <div class="sidebar-card">
-              <p class="sidebar-card-title">Tags</p>
-              <div class="detail-tags">
-                {tags.map((tag) => (
-                  <a href={`/tags/${slugifyTag(tag)}/`} class="detail-tag">{tag}</a>
-                ))}
-              </div>
+            <div class="post-body">
+              <Content />
             </div>
-          )}
-        </aside>
+
+            <RelatedPosts
+              currentSlug={entry.id}
+              currentCollection="deep-dives"
+              currentTags={tags}
+            />
+          </div>
+
+          <aside class="post-sidebar">
+            {(entry.data.topic || entry.data.era) && (
+              <div class="sidebar-card">
+                <p class="sidebar-card-title">Details</p>
+                {entry.data.topic && (
+                  <div class="sidebar-item">
+                    <span class="sidebar-item-label">Topic</span>
+                    <span class="sidebar-item-value">{entry.data.topic}</span>
+                  </div>
+                )}
+                {entry.data.era && (
+                  <div class="sidebar-item">
+                    <span class="sidebar-item-label">Era</span>
+                    <span class="sidebar-item-value">{entry.data.era}</span>
+                  </div>
+                )}
+                <div class="sidebar-item">
+                  <span class="sidebar-item-label">Reading Time</span>
+                  <span class="sidebar-item-value">{readingTime}</span>
+                </div>
+              </div>
+            )}
+
+            {tags.length > 0 && (
+              <div class="sidebar-card">
+                <p class="sidebar-card-title">Tags</p>
+                <div class="detail-tags">
+                  {tags.map((tag) => (
+                    <a href={`/tags/${slugifyTag(tag)}/`} class="detail-tag">{tag}</a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
       </div>
     </div>
-  </div>
+  )}
 </Layout>

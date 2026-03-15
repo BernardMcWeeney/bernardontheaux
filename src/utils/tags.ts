@@ -25,8 +25,8 @@ export async function getAllPosts(): Promise<TaggedPost[]> {
   const posts: TaggedPost[] = [
     ...reviews.filter(isPublished).map((entry) => ({
       title: entry.data.artist ? `${entry.data.artist} — ${entry.data.title}` : entry.data.title,
-      slug: entry.slug,
-      href: `/reviews/${entry.slug}/`,
+      slug: entry.id,
+      href: `/reviews/${entry.id}/`,
       collection: 'reviews',
       date: entry.data.review_date,
       excerpt: entry.data.excerpt,
@@ -35,8 +35,8 @@ export async function getAllPosts(): Promise<TaggedPost[]> {
     })),
     ...gigs.filter(isPublished).map((entry) => ({
       title: entry.data.title,
-      slug: entry.slug,
-      href: `/gigs/${entry.slug}/`,
+      slug: entry.id,
+      href: `/gigs/${entry.id}/`,
       collection: 'gigs',
       date: entry.data.event_date,
       excerpt: entry.data.excerpt,
@@ -45,8 +45,8 @@ export async function getAllPosts(): Promise<TaggedPost[]> {
     })),
     ...deepDives.filter(isPublished).map((entry) => ({
       title: entry.data.title,
-      slug: entry.slug,
-      href: `/deep-dives/${entry.slug}/`,
+      slug: entry.id,
+      href: `/deep-dives/${entry.id}/`,
       collection: 'deep-dives',
       date: entry.data.published_on,
       excerpt: entry.data.excerpt,
@@ -54,8 +54,8 @@ export async function getAllPosts(): Promise<TaggedPost[]> {
     })),
     ...playlists.filter(isPublished).map((entry) => ({
       title: entry.data.title,
-      slug: entry.slug,
-      href: `/playlists/${entry.slug}/`,
+      slug: entry.id,
+      href: `/playlists/${entry.id}/`,
       collection: 'playlists',
       date: entry.data.published_on,
       excerpt: entry.data.excerpt,
@@ -63,8 +63,8 @@ export async function getAllPosts(): Promise<TaggedPost[]> {
     })),
     ...notes.filter(isPublished).map((entry) => ({
       title: entry.data.title,
-      slug: entry.slug,
-      href: `/notes/${entry.slug}/`,
+      slug: entry.id,
+      href: `/notes/${entry.id}/`,
       collection: 'notes',
       date: entry.data.listened_on,
       excerpt: entry.data.excerpt,

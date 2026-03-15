@@ -18,31 +18,31 @@ export async function GET(context: APIContext) {
       title: `${entry.data.artist} — ${entry.data.title}`,
       pubDate: entry.data.review_date,
       description: entry.data.excerpt ?? '',
-      link: `/reviews/${entry.slug}/`,
+      link: `/reviews/${entry.id}/`,
     })),
     ...gigs.filter(isPublished).map((entry) => ({
       title: entry.data.title,
       pubDate: entry.data.event_date,
       description: entry.data.excerpt ?? '',
-      link: `/gigs/${entry.slug}/`,
+      link: `/gigs/${entry.id}/`,
     })),
     ...deepDives.filter(isPublished).map((entry) => ({
       title: entry.data.title,
       pubDate: entry.data.published_on,
       description: entry.data.excerpt ?? '',
-      link: `/deep-dives/${entry.slug}/`,
+      link: `/deep-dives/${entry.id}/`,
     })),
     ...playlists.filter(isPublished).map((entry) => ({
       title: entry.data.title,
       pubDate: entry.data.published_on,
       description: entry.data.excerpt ?? '',
-      link: `/playlists/${entry.slug}/`,
+      link: `/playlists/${entry.id}/`,
     })),
     ...notes.filter(isPublished).map((entry) => ({
       title: entry.data.title,
       pubDate: entry.data.listened_on,
       description: entry.data.excerpt ?? '',
-      link: `/notes/${entry.slug}/`,
+      link: `/notes/${entry.id}/`,
     })),
   ].sort((a, b) => b.pubDate.valueOf() - a.pubDate.valueOf());
 

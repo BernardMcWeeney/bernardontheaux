@@ -20,35 +20,35 @@ export const getStaticPaths: GetStaticPaths = async ({ paginate }) => {
     title: `${entry.data.artist} — ${entry.data.title}`,
     date: entry.data.review_date,
     kind: 'Review',
-    href: `/reviews/${entry.slug}/`,
+    href: `/reviews/${entry.id}/`,
   }));
 
   const gigs = (await getCollection('gigs')).filter(isPublished).map((entry) => ({
     title: entry.data.title,
     date: entry.data.event_date,
     kind: 'Gig diary',
-    href: `/gigs/${entry.slug}/`,
+    href: `/gigs/${entry.id}/`,
   }));
 
   const deepDives = (await getCollection('deep-dives')).filter(isPublished).map((entry) => ({
     title: entry.data.title,
     date: entry.data.published_on,
     kind: 'Deep dive',
-    href: `/deep-dives/${entry.slug}/`,
+    href: `/deep-dives/${entry.id}/`,
   }));
 
   const playlists = (await getCollection('playlists')).filter(isPublished).map((entry) => ({
     title: entry.data.title,
     date: entry.data.published_on,
     kind: 'Playlist',
-    href: `/playlists/${entry.slug}/`,
+    href: `/playlists/${entry.id}/`,
   }));
 
   const notes = (await getCollection('notes')).filter(isPublished).map((entry) => ({
     title: entry.data.title,
     date: entry.data.listened_on,
     kind: 'Listening note',
-    href: `/notes/${entry.slug}/`,
+    href: `/notes/${entry.id}/`,
   }));
 
   const items = [...reviews, ...gigs, ...deepDives, ...playlists, ...notes].sort(

@@ -59,7 +59,7 @@ const allArtists = [...new Set(notes.map((n) => n.data.artist).filter(Boolean))]
         <div class="filterable-card" data-artist={entry.data.artist ?? ''} data-tags={(entry.data.tags ?? []).join(',')}>
           <PostCard
             title={entry.data.title}
-            href={`/notes/${entry.slug}/`}
+            href={`/notes/${entry.id}/`}
             meta={formatDate(entry.data.listened_on)}
             excerpt={entry.data.excerpt}
             label="Note"

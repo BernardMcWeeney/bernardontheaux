@@ -2,21 +2,30 @@
 import Layout from '../../layouts/Layout.astro';
 import RelatedPosts from '../../components/RelatedPosts.astro';
 import Icon from '../../components/Icon.astro';
-import { getCollection } from 'astro:content';
+import GigPage from '../../components/tina/GigPage';
+import { getCollection, render } from 'astro:content';
 import { formatDate } from '../../utils/format';
 import { slugifyTag } from '../../utils/tags';
+import client from '../../../tina/__generated__/client';
 
 export async function getStaticPaths() {
   const entries = await getCollection('gigs');
-  return entries.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 }
 
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+const slug = Astro.params.slug!;
+
+let tinaData: any = null;
+try {
+  tinaData = await client.queries.gigs({ relativePath: `${slug}.md` });
+} catch {}
+
+const { Content } = await render(entry);
 const tags = entry.data.tags ?? [];
 
 const siteUrl = Astro.site?.toString().replace(/\/$/, '') ?? 'https://bernardontheaux.com';
-const pageUrl = `${siteUrl}/gigs/${entry.slug}/`;
+const pageUrl = `${siteUrl}/gigs/${entry.id}/`;
 
 const musicEventLd = {
   '@context': 'https://schema.org',
@@ -67,98 +76,108 @@ const breadcrumbLd = {
 >
   <script type="application/ld+json" set:html={JSON.stringify(musicEventLd)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  <div class="container">
-    <div class="post-layout">
-      <a class="post-back" href="/gigs/">← Back to Gigs</a>
 
-      <div class="post-banner">
-        {entry.data.cover ? (
-          <img src={entry.data.cover} alt={entry.data.title} />
-        ) : (
-          <div class="post-banner-placeholder">
-            <Icon name="gig" size={56} />
-          </div>
-        )}
-      </div>
+  {tinaData ? (
+    <GigPage
+      client:only="react"
+      query={tinaData.query}
+      variables={tinaData.variables}
+      data={tinaData.data}
+    />
+  ) : (
+    <div class="container">
+      <div class="post-layout">
+        <a class="post-back" href="/gigs/">← Back to Gigs</a>
 
-      <div class="post-content">
-        <div class="post-main">
-          <header class="post-header-detail">
-            <div class="post-collection-badge badge-gig">
-              <Icon name="gig" /> Gig Diary
-            </div>
-            <h1 class="post-title-detail">{entry.data.title}</h1>
-            <div class="post-meta-strip">
-              <span>{formatDate(entry.data.event_date)}</span>
-              <span>{entry.data.venue}</span>
-              <span>{entry.data.city}</span>
-            </div>
-          </header>
-
-          {entry.data.highlights && (
-            <div class="highlights-callout">
-              <p class="highlights-callout-title">Highlights</p>
-              <p>{entry.data.highlights}</p>
+        <div class="post-banner">
+          {entry.data.cover ? (
+            <img src={entry.data.cover} alt={entry.data.title} />
+          ) : (
+            <div class="post-banner-placeholder">
+              <Icon name="gig" size={56} />
             </div>
           )}
-
-          <div class="post-body">
-            <Content />
-          </div>
-
-          <RelatedPosts
-            currentSlug={entry.slug}
-            currentCollection="gigs"
-            currentTags={tags}
-            currentArtist={entry.data.artist}
-          />
         </div>
 
-        <aside class="post-sidebar">
-          <div class="sidebar-card">
-            <p class="sidebar-card-title">Event Info</p>
-            <div class="sidebar-item">
-              <span class="sidebar-item-label">Artist</span>
-              <span class="sidebar-item-value">{entry.data.artist}</span>
-            </div>
-            <div class="sidebar-item">
-              <span class="sidebar-item-label">Venue</span>
-              <span class="sidebar-item-value">{entry.data.venue}</span>
-            </div>
-            <div class="sidebar-item">
-              <span class="sidebar-item-label">City</span>
-              <span class="sidebar-item-value">{entry.data.city}</span>
-            </div>
-            <div class="sidebar-item">
-              <span class="sidebar-item-label">Date</span>
-              <span class="sidebar-item-value">{formatDate(entry.data.event_date)}</span>
-            </div>
-            {entry.data.tour && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Tour</span>
-                <span class="sidebar-item-value">{entry.data.tour}</span>
+        <div class="post-content">
+          <div class="post-main">
+            <header class="post-header-detail">
+              <div class="post-collection-badge badge-gig">
+                <Icon name="gig" /> Gig Diary
+              </div>
+              <h1 class="post-title-detail">{entry.data.title}</h1>
+              <div class="post-meta-strip">
+                <span>{formatDate(entry.data.event_date)}</span>
+                <span>{entry.data.venue}</span>
+                <span>{entry.data.city}</span>
+              </div>
+            </header>
+
+            {entry.data.highlights && (
+              <div class="highlights-callout">
+                <p class="highlights-callout-title">Highlights</p>
+                <p>{entry.data.highlights}</p>
               </div>
             )}
-            {entry.data.support && (
-              <div class="sidebar-item">
-                <span class="sidebar-item-label">Support</span>
-                <span class="sidebar-item-value">{entry.data.support}</span>
-              </div>
-            )}
+
+            <div class="post-body">
+              <Content />
+            </div>
+
+            <RelatedPosts
+              currentSlug={entry.id}
+              currentCollection="gigs"
+              currentTags={tags}
+              currentArtist={entry.data.artist}
+            />
           </div>
 
-          {tags.length > 0 && (
+          <aside class="post-sidebar">
             <div class="sidebar-card">
-              <p class="sidebar-card-title">Tags</p>
-              <div class="detail-tags">
-                {tags.map((tag) => (
-                  <a href={`/tags/${slugifyTag(tag)}/`} class="detail-tag">{tag}</a>
-                ))}
+              <p class="sidebar-card-title">Event Info</p>
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Artist</span>
+                <span class="sidebar-item-value">{entry.data.artist}</span>
               </div>
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Venue</span>
+                <span class="sidebar-item-value">{entry.data.venue}</span>
+              </div>
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">City</span>
+                <span class="sidebar-item-value">{entry.data.city}</span>
+              </div>
+              <div class="sidebar-item">
+                <span class="sidebar-item-label">Date</span>
+                <span class="sidebar-item-value">{formatDate(entry.data.event_date)}</span>
+              </div>
+              {entry.data.tour && (
+                <div class="sidebar-item">
+                  <span class="sidebar-item-label">Tour</span>
+                  <span class="sidebar-item-value">{entry.data.tour}</span>
+                </div>
+              )}
+              {entry.data.support && (
+                <div class="sidebar-item">
+                  <span class="sidebar-item-label">Support</span>
+                  <span class="sidebar-item-value">{entry.data.support}</span>
+                </div>
+              )}
             </div>
-          )}
-        </aside>
+
+            {tags.length > 0 && (
+              <div class="sidebar-card">
+                <p class="sidebar-card-title">Tags</p>
+                <div class="detail-tags">
+                  {tags.map((tag) => (
+                    <a href={`/tags/${slugifyTag(tag)}/`} class="detail-tag">{tag}</a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
       </div>
     </div>
-  </div>
+  )}
 </Layout>
