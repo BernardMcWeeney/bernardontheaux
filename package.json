@@ -3,29 +3,18 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "tinacms dev -c \"astro dev\"",
-    "build": "TINA_PUBLIC_IS_LOCAL=true tinacms build --local && astro build",
+    "dev": "astro dev",
+    "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/react": "^5.0.0",
     "@astrojs/rss": "^4.0.17",
     "@astrojs/sitemap": "^3.7.1",
     "@tailwindcss/vite": "^4.1.18",
-    "@tinacms/cli": "^2.1.9",
-    "@tinacms/datalayer": "^2.0.12",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@upstash/redis": "^1.37.0",
     "astro": "^6.0.4",
     "fuse.js": "^7.1.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "tailwindcss": "^4.1.18",
-    "tinacms": "^3.6.1",
-    "tinacms-gitprovider-github": "^4.0.12",
-    "upstash-redis-level": "^1.1.1"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "wrangler": "^4.73.0"
